@@ -126,9 +126,9 @@ a:hover {
 
 .layout {
   display: grid;
-  grid-template-columns: 228px minmax(0, 900px);
+  grid-template-columns: 228px minmax(0, 1800px);
   gap: 64px;
-  width: min(1240px, calc(100% - 48px));
+  width: min(2480px, calc(100% - 48px));
   margin: 0 auto;
 }
 
@@ -273,7 +273,7 @@ th {
 }
 
 h1 {
-  max-width: 920px;
+  max-width: 1840px;
   margin: 0;
   font-family: Georgia, "Times New Roman", serif;
   font-size: clamp(2.35rem, 4.35vw, 4.35rem);
@@ -283,7 +283,7 @@ h1 {
 }
 
 .subtitle {
-  max-width: 760px;
+  max-width: 1520px;
   margin: 18px 0 0;
   color: #303238;
   font-size: clamp(1.3rem, 2.35vw, 1.85rem);
@@ -570,17 +570,17 @@ code {
 }
 
 .reader-content {
-  max-width: 840px;
+  max-width: 1680px;
 }
 
 .reader-title > p:not(.kicker) {
-  max-width: 740px;
+  max-width: 1480px;
   color: #34363a;
   font-size: 1.04rem;
 }
 
 .reader-title h1 {
-  max-width: 760px;
+  max-width: 1520px;
   font-size: clamp(2.15rem, 3.7vw, 3.65rem);
   line-height: 1.1;
 }
@@ -1298,7 +1298,7 @@ code {
   flex-wrap: wrap;
   justify-content: space-between;
   gap: 16px 28px;
-  width: min(1240px, calc(100% - 48px));
+  width: min(2480px, calc(100% - 48px));
   margin: 0 auto;
   padding: 24px 0 42px;
   color: var(--muted);
