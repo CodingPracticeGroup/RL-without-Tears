@@ -18,7 +18,7 @@
       th, td { text-align:left; padding:10px 14px; border-bottom:1px solid var(--line); font-size:.95rem; }
       th { background:#eef2f6; font-weight:normal; color:var(--muted); font-size:.85rem; }
       td a { color:var(--accent); text-decoration:none; }
-      .todo { color:#9aa4b0; font-size:.85rem; }
+      .pages { color:#9aa4b0; font-size:.85rem; white-space:nowrap; }
       footer { margin-top:40px; padding-top:16px; border-top:1px solid var(--line); color:#8a94a0; font-size:.85rem; }
     </style>
   </head>
@@ -26,24 +26,24 @@
     <div class="wrap">
       <p class="crumbs"><a href="../../index.html">← 返回中文目录</a></p>
       <h1>PDF 完整版 · 全书逐章中文翻译</h1>
-      <p class="subtitle">对应英文原版《RL without Tears》完整 PDF（8 章正文 + 附录，共 101 页）</p>
+      <p class="subtitle">对应英文原版《RL without Tears》完整 PDF（8 章正文 + 附录，共 101 页）· 翻译完成</p>
       <p class="note">
-        本部分正在按「PDF 页图 → 视觉识别 → 翻译」流程逐章生成：正文逐句翻译；公式尽量转写为 KaTeX 数学，
-        无法可靠识别的公式以原书截图插入；图表直接截取原版页面；参考文献保留英文原文。
-        完成后下表将给出各章链接。
+        翻译说明：正文逐句翻译；公式转写为 KaTeX 数学并与原书公式编号（式 1–99）保持一致；图与大型公式表截取原版页面作为图片插入；
+        小型文字表按原文重排为中文表格；prompt/示例框保留英文原文并附中文示意，下划线强调与原文对应；
+        作者-年份引用保持原样；参考文献不翻译，按原书整页呈现。
       </p>
       <table>
-        <tr><th>章</th><th>标题（中文 / 原文）</th><th>中文版</th><th>英文原 PDF</th></tr>
-        <tr><td>第 1 章</td><td>引言 / Introduction</td><td class="todo">翻译中</td><td><a href="../../chapter/chapter-01-introduction.pdf">PDF</a></td></tr>
-        <tr><td>第 2 章</td><td>预备知识：LLM 与强化学习 / Preliminary</td><td class="todo">翻译中</td><td><a href="../../chapter/chapter-02-preliminary.pdf">PDF</a></td></tr>
-        <tr><td>第 3 章</td><td>理解 LLM 训练中的强化学习 / Understanding RL in LLM Training</td><td class="todo">翻译中</td><td><a href="../../chapter/chapter-03-understanding-rl-in-llm-training.pdf">PDF</a></td></tr>
-        <tr><td>第 4 章</td><td>面向 LLM 的改进强化学习 / Improved RL for LLMs</td><td class="todo">翻译中</td><td><a href="../../chapter/chapter-04-improved-rl-for-llms.pdf">PDF</a></td></tr>
-        <tr><td>第 5 章</td><td>面向 LLM 推理的强化学习 / RL for LLM Reasoning</td><td class="todo">翻译中</td><td><a href="../../chapter/chapter-05-rl-for-llm-reasoning.pdf">PDF</a></td></tr>
-        <tr><td>第 6 章</td><td>智能体强化学习 / Agentic RL</td><td class="todo">翻译中</td><td><a href="../../chapter/chapter-06-agentic-rl.pdf">PDF</a></td></tr>
-        <tr><td>第 7 章</td><td>多模态强化学习 / Multimodal RL</td><td class="todo">翻译中</td><td><a href="../../chapter/chapter-07-multimodal-rl.pdf">PDF</a></td></tr>
-        <tr><td>第 8 章</td><td>结论与未来方向 / Conclusions and Future Directions</td><td class="todo">翻译中</td><td><a href="../../chapter/chapter-08-conclusions-and-future-directions.pdf">PDF</a></td></tr>
-        <tr><td>附录</td><td>常用系统与数据集 / Datasets and Systems</td><td class="todo">翻译中</td><td><a href="../../chapter/appendix-datasets-and-systems.pdf">PDF</a></td></tr>
-        <tr><td>—</td><td>参考文献 / References（不翻译）</td><td class="todo">计划中</td><td><a href="../../rl-without-tears.pdf">完整 PDF</a></td></tr>
+        <tr><th>章</th><th>标题（中文 / 原文）</th><th>中文版</th><th>原书页码</th><th>英文原 PDF</th></tr>
+        <tr><td>第 1 章</td><td>引言 / Introduction</td><td><a href="ch01.html">阅读</a></td><td class="pages">p.5</td><td><a href="../../chapter/chapter-01-introduction.pdf">PDF</a></td></tr>
+        <tr><td>第 2 章</td><td>预备知识：LLM 与强化学习 / Preliminary</td><td><a href="ch02.html">阅读</a></td><td class="pages">p.6–13</td><td><a href="../../chapter/chapter-02-preliminary.pdf">PDF</a></td></tr>
+        <tr><td>第 3 章</td><td>理解 LLM 训练中的强化学习 / Understanding RL in LLM Training</td><td><a href="ch03.html">阅读</a></td><td class="pages">p.13–27</td><td><a href="../../chapter/chapter-03-understanding-rl-in-llm-training.pdf">PDF</a></td></tr>
+        <tr><td>第 4 章</td><td>面向 LLM 的改进强化学习 / Improved RL for LLMs</td><td><a href="ch04.html">阅读</a></td><td class="pages">p.27–47</td><td><a href="../../chapter/chapter-04-improved-rl-for-llms.pdf">PDF</a></td></tr>
+        <tr><td>第 5 章</td><td>面向 LLM 推理的强化学习 / RL for LLM Reasoning</td><td><a href="ch05.html">阅读</a></td><td class="pages">p.46–56</td><td><a href="../../chapter/chapter-05-rl-for-llm-reasoning.pdf">PDF</a></td></tr>
+        <tr><td>第 6 章</td><td>面向智能体的强化学习 / Agentic RL</td><td><a href="ch06.html">阅读</a></td><td class="pages">p.57–74</td><td><a href="../../chapter/chapter-06-agentic-rl.pdf">PDF</a></td></tr>
+        <tr><td>第 7 章</td><td>多模态强化学习 / Multimodal RL</td><td><a href="ch07.html">阅读</a></td><td class="pages">p.74–80</td><td><a href="../../chapter/chapter-07-multimodal-rl.pdf">PDF</a></td></tr>
+        <tr><td>第 8 章</td><td>结论与未来方向 / Conclusions and Future Directions</td><td><a href="ch08.html">阅读</a></td><td class="pages">p.80–81</td><td><a href="../../chapter/chapter-08-conclusions-and-future-directions.pdf">PDF</a></td></tr>
+        <tr><td>附录</td><td>数据集与系统 / Datasets and Systems</td><td><a href="app.html">阅读</a></td><td class="pages">p.82–83</td><td><a href="../../chapter/appendix-datasets-and-systems.pdf">PDF</a></td></tr>
+        <tr><td>—</td><td>参考文献 / References（按约定保留英文原文）</td><td><a href="refs.html">阅读</a></td><td class="pages">p.84–101</td><td><a href="../../rl-without-tears.pdf">完整 PDF</a></td></tr>
       </table>
       <footer>原文 © 2026 Wang, Zhou, Liu, Zhu, and Xiao，CC-BY 4.0。</footer>
     </div>
