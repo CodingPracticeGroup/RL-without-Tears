@@ -671,6 +671,57 @@
         而从“优化 LLM 的视角”讨论其优化思想。由 Bradley-Terry 奖励模型导出的损失函数可以写成：
       </p>
       <div class="equation">\[ \mathcal{L}_{\mathrm{dpo}}(\theta) \;=\; -\mathbb{E}_{(\mathbf{x},\mathbf{y}_a,\mathbf{y}_b)\sim\mathcal{D}_r}\Big[\log\mathrm{Sigmoid}\big(\beta\log\frac{\mathrm{Pr}_{\theta}(\mathbf{y}_a\mid\mathbf{x})}{\mathrm{Pr}_{\theta_{\mathrm{ref}}}(\mathbf{y}_a\mid\mathbf{x})}-\beta\log\frac{\mathrm{Pr}_{\theta}(\mathbf{y}_b\mid\mathbf{x})}{\mathrm{Pr}_{\theta_{\mathrm{ref}}}(\mathbf{y}_b\mid\mathbf{x})}\big)\Big] \tag{60} \]</div>
+      <figure class="float">
+        <img src="figs/p45-fig20.png" alt="图20：PPO 与 DPO 训练 LLM 的对比">
+        <figcaption>
+          <strong>图 20：</strong>标准 PPO 与 DPO 训练 LLM 的对比。PPO：用人类偏好数据训练奖励模型，再以它训练策略模型与价值函数；
+          DPO：人类偏好数据的使用更直接——策略直接在这些数据上训练，无需训练奖励模型。
+          （原图截取自英文原版 PDF 第 45 页）
+        </figcaption>
+      </figure>
+      <p>
+        这个损失函数利用 DPO 训练的隐式奖励（implicit reward），取代对外部奖励模型的需求。隐式奖励按概率的对数比计算：
+      </p>
+      <div class="equation">\[ R(\mathbf{x},\mathbf{y}) = \beta\log\frac{\mathrm{Pr}_{\theta}(\mathbf{y}\mid\mathbf{x})}{\mathrm{Pr}_{\theta_{\mathrm{ref}}}(\mathbf{y}\mid\mathbf{x})} \tag{61} \]</div>
+      <p>
+        这里可以把 DPO 看作通过“策略与参考模型下输出的相对似然”直接对人类反馈建模。相比“先训练独立奖励模型、再用 PPO 等强化学习算法调整策略”
+        的传统方法，这种方法更直白。借助 3.1 节提到的假设空间，可以进一步理解 DPO 的优化目标。实践中，如图 21 所示，
+        可以把 DPO 理解为在假设空间中按 Bradley-Terry 模型做重排：它提高偏好数据的输出概率、降低不受偏好输出的概率。
+        与 TRPO 类似，DPO 也包含来自参考模型的惩罚项，确保更新保持在策略模型的可信行为空间内。
+      </p>
+      <p>
+        然而事物都有两面。DPO 简化了强化学习过程，也带来局限。值得注意的是：由于 DPO 去掉了训练中的探索环节，
+        其潜在峰值表现通常被认为低于以 PPO 为代表、包含探索、能发现更优策略的强化学习方法。换言之，DPO 的表现本质上受限于偏好数据中标注的
+        受偏好输出。为突破这一限制，现有做法聚焦保证高质量偏好输出：或借助 GPT-4 等先进 LLM，或依靠人工标注
+        （Cui et al., 2024a; Morimura et al., 2024）。
+      </p>
+      <figure class="float">
+        <img src="figs/p46-fig21.png" alt="图21：从假设空间视角看 DPO 的优化目标">
+        <figcaption>
+          <strong>图 21：</strong>从假设空间视角说明 DPO 的优化目标。右上图是优化前不同假设上的概率分布，\(\mathbf{y}_a\) 为受偏好输出、
+          \(\mathbf{y}_b\) 为不受偏好输出；右下图是应用 DPO 后的概率：受偏好输出似然上升、不受偏好输出似然下降。
+          注意优化过程中，与 \(\mathbf{y}_a\) 相似的输出（如 \(\mathbf{y}_1\)）概率也会上升，与 \(\mathbf{y}_b\) 相似的输出（如 \(\mathbf{y}_2\)）
+          概率会下降——这是模型的泛化所致。（原图截取自英文原版 PDF 第 46 页）
+        </figcaption>
+      </figure>
+      <p>
+        与 DPO 相关的另一个局限是过度优化。由于 DPO 用 Bradley-Terry 模型刻画偏好，它可能受过度优化之累，例如长度投机：
+        更长的输出被误认为更符合人类偏好（Singhal et al., 2023; Wang et al., 2023b）。已有不少工作着手解决这一问题、
+        提出了 DPO 的多种变体，详见表 3。这里我们只介绍它们的优化目标；更多讨论请读者参阅相关论文。
+      </p>
+      <figure class="float">
+        <img src="figs/p47-table3.png" alt="表3：DPO 变体及其优化目标">
+        <figcaption>
+          <strong>表 3：</strong>DPO 变体及其优化目标（表内为各变体的数学目标函数，此处按原书整表截图保留原文）。
+          （原表截取自英文原版 PDF 第 47 页）
+        </figcaption>
+      </figure>
+      <p class="pagebreak-note">［第 4 章正文完（含表 3），对应原书页 27–47。］</p>
+
+      <nav class="chapter-nav">
+        <a href="ch03.html">← 上一章：理解 LLM 训练中的强化学习</a>
+        <a href="ch05.html">下一章：面向 LLM 推理的强化学习 →</a>
+      </nav>
     </div>
   </body>
 </html>

@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>第 5 章 面向 LLM 推理的强化学习 —《RL without Tears》中文全译</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="../../assets/favicon/favicon-32.png">
+    <link rel="stylesheet" href="pdf.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+    <script defer src="../site/math.js"></script>
+  </head>
+  <body>
+    <div class="zh-banner">
+      《RL without Tears》中文全译（AI 辅助翻译，非官方译本） ·
+      <a href="../../index.html">中文目录</a> ·
+      <a href="index.html">PDF 版目录</a> ·
+      <a href="https://niutrans.github.io/RL-without-Tears/">英文原版网站</a>
+    </div>
+    <div class="wrap">
+      <p class="crumbs"><a href="index.html">← PDF 版目录</a></p>
+                        <h1>第 5 章 面向 LLM 推理的强化学习</h1>
+      <p class="subtitle">RL for LLM Reasoning</p>
+      <p class="chapter-meta">
+        对应英文原版 PDF 第 46–56 页（§5）。公式编号与原书一致（62 起）；图表为原书页截图或依据原文重排的译文。
+      </p>
+
+      <h2>5 面向 LLM 推理的强化学习</h2>
+      <p>
+        到目前为止，我们主要讨论了用强化学习训练 LLM 的各个环节及其应用与改进。这些方法很容易推广到一大类场景——只要输出的正确性可以通过
+        “是否包含期望结果”来检验。例如在计算数学表达式时，答案正确就给正反馈、错误就给负反馈。然而在许多需要复杂推理的问题上，
+        只看最终答案对 learning 是不够的。想象一个学生只拿到一道有难度数学题的最终答案是对是错：知道对错并不能帮助他弄明白自己错在哪一步、
+        正确的答案又该如何推出。更好的做法是带着学生一步一步拆解问题，引导他理解背后的概念、说出每一步背后的逻辑。为此，研究者们也在探索
+        用强化学习教 LLM 不仅给出正确答案，更发展并呈现符合人类认知过程、连贯且一步一步的推理。就此而言，
+        强化学习此前已被证明能有效训练神经网络在游戏环境内做复杂规划与推理，AlphaGo（Silver et al., 2016）与 AlphaStar
+        （Vinyals et al., 2019）等著名成果就是例证。鉴于这些进展、以及问题求解本身固有的交互性，把强化学习应用于 LLM 推理是水到渠成的事。
+      </p>
+      <p>
+        本章进一步深入探讨用强化学习增强 LLM 推理能力这一近期广受关注的主题。我们先概述能充分释放 LLM 推理潜力的测试时扩展（test-time scaling），
+        包括 Best-of-\(N\) 采样、逐步验证与蒙特卡洛树搜索；随后讨论两个关键问题：如何有效地扩展强化学习、如何迭代强化学习过程以增强推理能力。
+        需要说明：下文方法主要以数学推理任务来说明，但它们适用于广泛的决策问题。
+      </p>
+
+      <h2>5.1 测试时扩展</h2>
+      <p>
+        我们先回顾强化学习的根本目标：最大化输出生成过程中获得的奖励。这一目标过去主要靠训练时优化技术（如策略梯度或 PPO）达成。
+        训练之外，近期研究揭示了在测试时扩展计算的好处——这一过程称为测试时扩展（test-time scaling），能显著增强奖励最大化，
+        尤其在推理任务上。实践中，实现测试时扩展的一种简单做法是提示技术：例如在输入后追加“让我们逐步思考”（Let's think step-by-step），
+        就能有效促使 LLM 在生成中展开更详细的推理。这种做法虽能提升推理准确率，却常常只带来次优表现：模型并非天生就理解最有利的推理过程。
+        为解决这个问题，可以引入奖励模型的引导来做测试时扩展，见下文各小节。
+      </p>
+    </div>
+  </body>
+</html>
