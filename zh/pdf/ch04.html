@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>第 4 章 面向 LLM 的改进强化学习 —《RL without Tears》中文全译</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="../../assets/favicon/favicon-32.png">
+    <link rel="stylesheet" href="pdf.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+    <script defer src="../site/math.js"></script>
+  </head>
+  <body>
+    <div class="zh-banner">
+      《RL without Tears》中文全译（AI 辅助翻译，非官方译本） ·
+      <a href="../../index.html">中文目录</a> ·
+      <a href="index.html">PDF 版目录</a> ·
+      <a href="https://niutrans.github.io/RL-without-Tears/">英文原版网站</a>
+    </div>
+    <div class="wrap">
+      <p class="crumbs"><a href="index.html">← PDF 版目录</a></p>
+                  <h1>第 4 章 面向 LLM 的改进强化学习</h1>
+      <p class="subtitle">Improved RL for LLMs</p>
+      <p class="chapter-meta">
+        对应英文原版 PDF 第 27–45 页（§4）。公式编号与原书一致（39 起）；图表为原书页截图或依据原表重排的译文。
+      </p>
+
+      <h2>4 面向 LLM 的改进强化学习</h2>
+      <p>
+        上一节介绍了重要性采样、奖励基线等对强化学习的改进；但把它们直接用于训练 LLM 仍面临诸多挑战。
+        本节进一步深入，讨论用强化学习训练 LLM 的种种改进。
+      </p>
+
+      <h2>4.1 更高级的奖励模型</h2>
+      <p>
+        奖励模型是强化学习的基础组件，因为它定义了策略模型优化的目标。因此，奖励模型的训练质量直接影响 RLHF 阶段 LLM 优化的效果：
+        欠佳的奖励模型会把 LLM 引向次优，而优秀的奖励模型能确保 LLM 与期望的行为和目标有效对齐。这里我们介绍几种获得高级奖励模型的方法。
+        讨论会比较通用，因为奖励模型在机器人规划与控制等大量强化学习问题中都被广泛使用；这种通用性也让下文方法易于迁移到其他相关应用。
+      </p>
+
+      <h3>4.1.1 自动偏好数据生成</h3>
+      <p>
+        从人类偏好中学习是对 LLM 进行对齐的有效流行方法，但标注偏好数据代价高昂。依赖人类反馈不仅有可扩展性瓶颈，还可能引入偏差——
+        人类反馈本质上是主观的。因此，基于 AI 的反馈方法为这些可扩展性与一致性问题提供了有前景的解法，绕开了人类标注的局限。
+      </p>
+      <p>
+        一种简单的方法是用 LLM 生成偏好数据。给定一组输入，先用 LLM 生成成对的输出，然后提示 LLM 对每一对之间的偏好进行标注……
+        <!-- 接续原书页28 -->
+      </p>
+    </div>
+  </body>
+</html>
