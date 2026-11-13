@@ -83,7 +83,7 @@
         而不是在整个生成过程中持续分布的中间奖励。
       </p>
       <figure class="float">
-        <img src="figs/p29-fig13.png" alt="图13：奖励塑形示例">
+        <img src="figs/p29-fig13.png?v=figfix2" alt="图13：奖励塑形示例">
         <figcaption>
           <strong>图 13：</strong>奖励塑形示例。这里实现的是基于长度的塑形奖励：每生成 10 个词元给 +1 的中间奖励；
           最后再由奖励模型用一个延迟奖励评估输出的整体质量。（原图截取自英文原版 PDF 第 29 页）
@@ -165,7 +165,7 @@
         优化这一项时只更新 LLM 的参数，奖励线性映射层的参数保持固定。因此在式 (44) 中，正则项对应的参数是 \(\theta\)，特指 LLM 的参数。
       </p>
       <figure class="float">
-        <img src="figs/p31-fig14.png" alt="图14：参数冻结与正则化方法">
+        <img src="figs/p31-fig14.png?v=figfix2" alt="图14：参数冻结与正则化方法">
         <figcaption>
           <strong>图 14：</strong>训练奖励模型时，可用参数冻结与正则化方法保留 LLM 的特征，从而提升奖励的泛化能力。
           （原图截取自英文原版 PDF 第 31 页）
@@ -179,7 +179,7 @@
         可以转而把 LLM 用作奖励模型，使其具备文本生成与推理能力，如图 15 所示。
       </p>
       <figure class="float">
-        <img src="figs/p31-fig15.png" alt="图15：生成式奖励模型，用 LLM 预测标签词元">
+        <img src="figs/p31-fig15.png?v=figfix2" alt="图15：生成式奖励模型，用 LLM 预测标签词元">
         <figcaption>
           <strong>图 15：</strong>在生成式奖励模型中，我们用一个 LLM 在给定提示、输入和一对输出时预测标签词元。
           该模型的训练方式与标准 LLM 完全相同。（原图截取自英文原版 PDF 第 31 页）
@@ -330,7 +330,7 @@
         基于评分细则的奖励建模同样适用于逐点评估（pointwise evaluation），即只输入 \((\mathbf{x},\mathbf{y})\)。
       </p>
       <figure class="float">
-        <img src="figs/p35-fig16.png" alt="图16：自动评分细则生成的两种常用方式">
+        <img src="figs/p35-fig16.png?v=figfix2" alt="图16：自动评分细则生成的两种常用方式">
         <figcaption>
           <strong>图 16：</strong>两种常用的自动评分细则生成方式，以清单式细则为例说明。(a) 用外部 LLM 生成评分细则；
           (b) 生成式奖励模型（GRM）自发生成评分细则。（原图截取自英文原版 PDF 第 35 页）
@@ -381,7 +381,7 @@
         \(\mathbf{y}^+\) 为受偏好输出，否则判为预测错误。通过构造大量两两排序样本，即可用排序准确率评估奖励模型：
       </p>
       <figure class="float">
-        <img src="figs/p37-fig17.png" alt="图17：常用的奖励模型评估方法">
+        <img src="figs/p37-fig17.png?v=figfix2" alt="图17：常用的奖励模型评估方法">
         <figcaption>
           <strong>图 17：</strong>常用的奖励模型评估方法。基于强化学习的评估：用奖励模型为策略优化提供奖励信号，以其优化所得策略的
           下游性能衡量奖励模型质量；两两排序评估：奖励模型比较受偏好与不受偏好的输出，预测结果与人类偏好标注核对；
@@ -443,7 +443,7 @@
         实际实现中，基于时序差分（TD）的优势估计可写成：
       </p>
       <figure class="float">
-        <img src="figs/p39-fig18.png" alt="图18：蒙特卡洛优势估计的高方差问题示意">
+        <img src="figs/p39-fig18.png?v=figfix2" alt="图18：蒙特卡洛优势估计的高方差问题示意">
         <figcaption>
           <strong>图 18：</strong>基于蒙特卡洛的优势估计中的高方差问题示意，使用式 (13) 所述基于长度的奖励函数。
           通常，若价值模型训练良好，它会基于多数输出约 60 词元、在时刻 \(t\) 预测平均价值 \(V_t=6\)。
@@ -485,7 +485,7 @@
         这样就能省去价值模型组件、提升效率。
       </p>
       <figure class="float">
-        <img src="figs/p40-fig19.png" alt="图19：组相对策略优化">
+        <img src="figs/p40-fig19.png?v=figfix2" alt="图19：组相对策略优化">
         <figcaption>
           <strong>图 19：</strong>组相对策略优化（GRPO）。与 PPO 相比，它免去价值模型，直接用一组输出的奖励估计优势，
           能简化训练过程、降低计算资源需求。（原图截取自英文原版 PDF 第 40 页）
@@ -672,7 +672,7 @@
       </p>
       <div class="equation">\[ \mathcal{L}_{\mathrm{dpo}}(\theta) \;=\; -\mathbb{E}_{(\mathbf{x},\mathbf{y}_a,\mathbf{y}_b)\sim\mathcal{D}_r}\Big[\log\mathrm{Sigmoid}\big(\beta\log\frac{\mathrm{Pr}_{\theta}(\mathbf{y}_a\mid\mathbf{x})}{\mathrm{Pr}_{\theta_{\mathrm{ref}}}(\mathbf{y}_a\mid\mathbf{x})}-\beta\log\frac{\mathrm{Pr}_{\theta}(\mathbf{y}_b\mid\mathbf{x})}{\mathrm{Pr}_{\theta_{\mathrm{ref}}}(\mathbf{y}_b\mid\mathbf{x})}\big)\Big] \tag{60} \]</div>
       <figure class="float">
-        <img src="figs/p45-fig20.png" alt="图20：PPO 与 DPO 训练 LLM 的对比">
+        <img src="figs/p45-fig20.png?v=figfix2" alt="图20：PPO 与 DPO 训练 LLM 的对比">
         <figcaption>
           <strong>图 20：</strong>标准 PPO 与 DPO 训练 LLM 的对比。PPO：用人类偏好数据训练奖励模型，再以它训练策略模型与价值函数；
           DPO：人类偏好数据的使用更直接——策略直接在这些数据上训练，无需训练奖励模型。
@@ -696,7 +696,7 @@
         （Cui et al., 2024a; Morimura et al., 2024）。
       </p>
       <figure class="float">
-        <img src="figs/p46-fig21.png" alt="图21：从假设空间视角看 DPO 的优化目标">
+        <img src="figs/p46-fig21.png?v=figfix2" alt="图21：从假设空间视角看 DPO 的优化目标">
         <figcaption>
           <strong>图 21：</strong>从假设空间视角说明 DPO 的优化目标。右上图是优化前不同假设上的概率分布，\(\mathbf{y}_a\) 为受偏好输出、
           \(\mathbf{y}_b\) 为不受偏好输出；右下图是应用 DPO 后的概率：受偏好输出似然上升、不受偏好输出似然下降。
@@ -710,7 +710,7 @@
         提出了 DPO 的多种变体，详见表 3。这里我们只介绍它们的优化目标；更多讨论请读者参阅相关论文。
       </p>
       <figure class="float">
-        <img src="figs/p47-table3.png" alt="表3：DPO 变体及其优化目标">
+        <img src="figs/p47-table3.png?v=figfix2" alt="表3：DPO 变体及其优化目标">
         <figcaption>
           <strong>表 3：</strong>DPO 变体及其优化目标（表内为各变体的数学目标函数，此处按原书整表截图保留原文）。
           （原表截取自英文原版 PDF 第 47 页）
