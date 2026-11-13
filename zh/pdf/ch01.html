@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>第 1 章 引言 —《RL without Tears》中文全译</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="../../assets/favicon/favicon-32.png">
+    <link rel="stylesheet" href="pdf.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+    <script defer src="../site/math.js"></script>
+  </head>
+  <body>
+    <div class="zh-banner">
+      《RL without Tears》中文全译（AI 辅助翻译，非官方译本） ·
+      <a href="../../index.html">中文目录</a> ·
+      <a href="index.html">PDF 版目录</a> ·
+      <a href="https://niutrans.github.io/RL-without-Tears/">英文原版网站</a>
+    </div>
+    <div class="wrap">
+      <p class="crumbs"><a href="index.html">← PDF 版目录</a></p>
+      <h1>第 1 章 引言</h1>
+      <p class="subtitle">Introduction</p>
+      <p class="chapter-meta">
+        对应英文原版 PDF 第 5 页（§1）。原文引用（作者, 年份）按学术惯例保留原文形式；本节原版无图表。
+      </p>
+
+      <p>
+        强化学习（RL）是一门交叉学科，其起源可以同时追溯到心理学与最优控制。多年来，这一概念在人工智能与机器学习的范畴内
+        得到了进一步的发展和形式化。其基本思想是：智能体通过接收环境对其行为的反馈来学习如何决策。这一方法极为通用，
+        能应用于范围广泛的问题——从下国际象棋、围棋这类复杂博弈，到自动驾驶车辆的控制。
+      </p>
+      <p>
+        近期的一个重大突破，是强化学习在自然语言处理（NLP）领域、特别是 LLM 研发中的大规模应用。例如，强化学习被广泛认为是
+        把预训练 LLM 对齐到人类偏好与价值观的有效途径（Christiano et al., 2017）。其中一类方法——基于人类反馈的强化学习
+        （reinforcement learning from human feedback，RLHF）——成为 OpenAI GPT-4 等先进 LLM 得以发展的基础。
+        更近期，强化学习在使 LLM 具备复杂推理能力方面显示出巨大前景（OpenAI, 2024; Deepseek, 2025; Team et al., 2025a）。
+        结果，对“LLM 的强化学习”的关注度急剧升温。如今大量会议论文都在讨论 LLM 中的强化学习，最近几个月出现的数量甚至更多。
+        研究社区情绪高涨，许多领域研究者预期一个大规模强化学习算法能够进一步推动 AI 发展的新转折点。这一趋势又被
+        基于 LLM 的智能体的兴起所加强：在这类系统中，模型必须从交互与经验中学习，以便在动态环境里做出有效决策。
+        从这个角度看，强化学习正在成为构建更强大、更具适应性的智能系统的关键技术。这一观点与
+        Silver et al.（2021）提出的“Reward Is Enough（奖励即足够）”假说高度呼应：
+      </p>
+      <blockquote>
+        智能及其相关能力，可以被理解为服务于“智能体在其所处环境中对奖励的最大化”。
+        （Intelligence, and its associated abilities, can be understood as subserving the maximisation of reward
+        by an agent acting in its environment.）
+      </blockquote>
+      <p>
+        这一假说恰恰说明了强化学习为何与 LLM 发展的下一阶段特别相关：模型不必只从静态监督中学习，
+        而是可以通过大规模的经验与奖励获得日益复杂的能力。
+      </p>
+      <p>
+        历史上，强化学习在主流 NLP 中扮演的角色相当有限——监督学习长期是占主导地位的研究范式。因此，尽管把强化学习用于
+        LLM 训练对机器学习研究者看起来是理所当然的选择，它却给历来以监督学习方法为主的 NLP 社区引入了大量新概念。
+        作为 NLP 研究者，我们常听到关于强化学习的这类说法——“用价值函数估计期望累计奖励”、“把策略与 PPO 对齐”，
+        或者干脆“用奖励来训练一个模型”。这些技术常被轻描淡写、仿佛不证自明。然而，对于主要以监督学习背景受训的研究者，
+        强化学习数学化的公式、众多的期望、价值函数与优势，理解起来相当困难。这一鸿沟在 LLM 训练中日益重要：
+        理解强化学习已不再是某个专门方向的事，而是跟进和开发现代 AI 系统的基本功。
+      </p>
+      <p>
+        从标准参考文献中学习强化学习看似理所当然，但初看之下并不顺手。常见的强化学习教材，例如
+        Sutton &amp; Barto（2018）的著作，大多基于经典机器人或控制问题。这让强化学习的概念难以与 LLM 的概念相对接。
+        而另一方面，多数 LLM 文献又缺乏对强化学习技术的深入讨论，常常略去相关细节。于是，我们发现自己正处在
+        强化学习与 LLM 之间一个尴尬的中间地带，设法要把两个领域连接起来。
+      </p>
+      <p>
+        本文的目标，是从 LLM 训练的视角对强化学习做一个全面入门。我们先从 LLM 研究者熟悉的角度介绍强化学习的
+        基础概念与算法，用具体的 LLM 训练示例加以说明。随后讨论 LLM 强化学习的近期进展，包括改进的奖励建模、
+        优势估计、训练效率与策略优化。在标准的 LLM 对齐之外，我们进一步介绍强化学习如何用于增强推理能力、
+        支撑 LLM 智能体中的长程决策，以及优化多模态理解与生成模型。最后，我们总结有前景的未来方向，
+        并概述常用系统与数据集。
+      </p>
+      <p class="pagebreak-note">［原书页 5 完，本节共 1 页］</p>
+
+      <nav class="chapter-nav">
+        <a href="index.html">↑ 返回目录</a>
+        <a href="ch02.html">下一章：预备知识 →</a>
+      </nav>
+    </div>
+  </body>
+</html>
