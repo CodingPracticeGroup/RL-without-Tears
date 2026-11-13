@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta
+      name="description"
+      content="《RL without Tears：LLM 时代的强化学习入门》中文翻译版——面向 LLM 研究者的强化学习导读。"
+    >
+    <title>RL without Tears：LLM 时代的强化学习入门（中文版）</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon/favicon-32.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="assets/favicon/apple-touch-icon.png">
+    <link rel="stylesheet" href="styles.css?v=20260911">
+    <style>
+      .zh-banner { background:#eef4fa; border-bottom:1px solid #cfe0ef; color:#2f5d8a; font-size:.85rem; padding:8px 24px; text-align:center; }
+      .zh-banner a { color:#2f5d8a; }
+    </style>
+  </head>
+  <body>
+    <div class="zh-banner">
+      本页为中文翻译版（AI 辅助翻译，非官方译本） ·
+      <a href="../../index.html">返回中文目录</a> ·
+      <a href="https://niutrans.github.io/RL-without-Tears/">英文原版网站</a>
+    </div>
+    <header class="topbar">
+      <a class="brand" href="index.html">RL without Tears（中文版）</a>
+      <nav class="topnav" aria-label="主导航">
+        <a href="reader.html">在线读本</a>
+        <a href="cheatsheet.html">公式速查</a>
+        <a href="glossary.html">术语表</a>
+        <a href="#chapters">章节</a>
+        <a href="#materials">配套材料</a>
+        <a href="#cite">引用</a>
+      </nav>
+    </header>
+
+    <main class="layout">
+      <aside class="sidebar" aria-label="页内导航">
+        <nav>
+          <a href="#abstract">摘要</a>
+          <a href="#chapters">章节</a>
+          <a href="#materials">配套材料</a>
+          <a href="#cite">引用</a>
+        </nav>
+      </aside>
+
+      <article class="content">
+        <section class="book-hero">
+          <p class="kicker">配套网站中文版 · 2026 年 9 月</p>
+          <h1>RL without Tears</h1>
+          <p class="subtitle">LLM 时代的强化学习入门（中文翻译版）</p>
+          <p class="authors">Chenglong Wang<sup>1</sup> &middot; Hang Zhou<sup>1</sup> &middot; Tongran Liu<sup>2</sup> &middot; Jingbo Zhu<sup>1</sup> &middot; Tong Xiao<sup>1</sup></p>
+          <div class="affiliations" aria-label="作者单位">
+            <div><sup>1</sup>中国东北大学</div>
+            <div><sup>2</sup>中国科学院心理研究所，中国</div>
+          </div>
+          <div class="action-row" aria-label="主要链接">
+            <a href="reader.html">在线阅读</a>
+            <a href="assets/rl-without-tears.pdf">下载英文原版 PDF</a>
+            <a href="https://github.com/NiuTrans/RL-without-Tears" target="_blank" rel="noopener">GitHub</a>
+            <a href="#cite">BibTeX</a>
+          </div>
+          <div class="topic-pills" aria-label="覆盖主题">
+            <span>RLHF</span>
+            <span>奖励建模</span>
+            <span>推理强化学习</span>
+            <span>智能体强化学习</span>
+            <span>多模态强化学习</span>
+          </div>
+        </section>
+
+        <section class="block" id="abstract">
+          <h2>摘要</h2>
+          <p class="lead">
+            强化学习已经成为描述现代 LLM 后训练（post-training）的主要语言之一：它把模型生成的行为转化为轨迹（trajectory），
+            用反馈对这种行为进行评估，并更新模型，使更好的行为更可能出现。本教程从 LLM 的视角介绍强化学习，
+            以提示词（prompt）、词元（token）、奖励、验证器（verifier）、偏好数据和交互历史作为核心对象来展开。
+          </p>
+          <p>
+            全文的组织方式是一座渐进式的桥梁，而不是方法目录。它首先回顾把 LLM 看作策略（policy）所需的 LLM 与强化学习记号，
+            然后从一个具体的训练示例出发推导出 PPO 风格的 RLHF，解释为什么需要奖励、优势（advantage）、重要性采样（importance sampling）
+            和参考模型（reference model），之后才进入更强的奖励建模、高效优化、DPO、推理模型、智能体系统与多模态生成。
+          </p>
+        </section>
+
+        <section class="block" id="chapters">
+          <h2>章节</h2>
+          <ol class="chapter-list">
+            <li>
+              <div class="chapter-title-row">
+                <a href="reader.html#introduction">引言</a>
+                <a class="chapter-pdf" href="assets/chapters/chapter-01-introduction.pdf" aria-label="下载第 1 章英文 PDF">英文 PDF</a>
+              </div>
+              <p>解释为什么 LLM 训练越来越需要针对完整行为的反馈，而不仅仅是词元级的示范数据。</p>
+            </li>
+            <li>
+              <div class="chapter-title-row">
+                <a href="reader.html#preliminaries">预备知识：LLM 与强化学习</a>
+                <a class="chapter-pdf" href="assets/chapters/chapter-02-preliminary.pdf" aria-label="下载第 2 章英文 PDF">英文 PDF</a>
+              </div>
+              <p>建立通用记号：LLM 侧的自回归生成、强化学习侧的马尔可夫决策过程（MDP）与轨迹，以及两者之间的对应关系。</p>
+            </li>
+            <li>
+              <div class="chapter-title-row">
+                <a href="reader.html#rl-training">理解 LLM 训练中的强化学习</a>
+                <a class="chapter-pdf" href="assets/chapters/chapter-03-understanding-rl-in-llm-training.pdf" aria-label="下载第 3 章英文 PDF">英文 PDF</a>
+              </div>
+              <p>从一个作业辅导助手的示例出发，逐步推导 PPO 风格的 RLHF 工作流：策略梯度、信用分配、优势、重要性采样、PPO 与奖励模型。</p>
+            </li>
+            <li>
+              <div class="chapter-title-row">
+                <a href="reader.html#improved-rl">面向 LLM 的改进强化学习</a>
+                <a class="chapter-pdf" href="assets/chapters/chapter-04-improved-rl-for-llms.pdf" aria-label="下载第 4 章英文 PDF">英文 PDF</a>
+              </div>
+              <p>重审基础工作流并追问实践中必须改进之处：奖励质量、奖励稀疏、奖励泛化、优势估计、训练效率，以及直接偏好优化（DPO）。</p>
+            </li>
+            <li>
+              <div class="chapter-title-row">
+                <a href="reader.html#reasoning">面向推理的强化学习</a>
+                <a class="chapter-pdf" href="assets/chapters/chapter-05-rl-for-llm-reasoning.pdf" aria-label="下载第 5 章英文 PDF">英文 PDF</a>
+              </div>
+              <p>展示可验证推理如何把采样与搜索变成训练信号：Best-of-N、过程验证、蒙特卡洛树搜索（MCTS）、迭代式强化学习、大规模强化学习与同策略蒸馏。</p>
+            </li>
+            <li>
+              <div class="chapter-title-row">
+                <a href="reader.html#agents">智能体强化学习</a>
+                <a class="chapter-pdf" href="assets/chapters/chapter-06-agentic-rl.pdf" aria-label="下载第 6 章英文 PDF">英文 PDF</a>
+              </div>
+              <p>把同一套反馈循环扩展到交互式智能体（agent）：规划、工具调用、环境、信用分配、记忆、技能与精炼如何共同塑造长轨迹。</p>
+            </li>
+            <li>
+              <div class="chapter-title-row">
+                <a href="reader.html#multimodal">多模态强化学习</a>
+                <a class="chapter-pdf" href="assets/chapters/chapter-07-multimodal-rl.pdf" aria-label="下载第 7 章英文 PDF">英文 PDF</a>
+              </div>
+              <p>超越纯文本策略：讨论面向理解任务的视觉奖励模型，以及面向扩散与流匹配生成的轨迹式强化学习。</p>
+            </li>
+            <li>
+              <div class="chapter-title-row">
+                <a href="reader.html#conclusion">结论与未来方向</a>
+                <a class="chapter-pdf" href="assets/chapters/chapter-08-conclusions-and-future-directions.pdf" aria-label="下载第 8 章英文 PDF">英文 PDF</a>
+              </div>
+              <p>回到全局视角，指出开放方向：面向预训练的强化学习、更廉价的强化学习、扩展极限预测，以及持续自我进化的模型。</p>
+            </li>
+            <li id="chapters-appendix">
+              <div class="chapter-title-row">
+                <a href="reader.html#systems">附录：系统与数据集</a>
+                <a class="chapter-pdf" href="assets/chapters/appendix-datasets-and-systems.pdf" aria-label="下载附录英文 PDF">英文 PDF</a>
+              </div>
+              <p>汇总论文中提到的强化学习系统、偏好数据集、推理数据与智能体环境。</p>
+            </li>
+          </ol>
+        </section>
+
+        <section class="block" id="materials">
+          <h2>配套材料</h2>
+          <div class="material-grid">
+            <a class="material" href="reader.html">
+              <span>在线读本（中文版）</span>
+              <p>与教程章节顺序一致的中文结构化阅读路径，含章节要点、公式、参考文献与精选插图。</p>
+            </a>
+            <a class="material" href="cheatsheet.html">
+              <span>公式速查表</span>
+              <p>一页纸的核心目标函数与估计式参考。</p>
+            </a>
+            <a class="material" href="glossary.html">
+              <span>术语表</span>
+              <p>统一强化学习、奖励建模、推理与智能体领域的缩写、记号与简明定义。</p>
+            </a>
+            <a class="material" href="reader.html#systems">
+              <span>系统与数据集</span>
+              <p>框架、偏好数据、推理数据与智能体环境的简明起点。</p>
+            </a>
+          </div>
+        </section>
+
+        <section class="block" id="cite">
+          <h2>引用</h2>
+          <pre><code>@misc{wang2026rlwithouttears,
+  title  = {RL without Tears: An Introduction in the Era of LLMs},
+  author = {Chenglong Wang and Hang Zhou and Tongran Liu and Jingbo Zhu and Tong Xiao},
+  year   = {2026},
+  note   = {Companion site}
+}</code></pre>
+          <p>（引用请指向英文原版。本中文翻译版遵循原文的 CC-BY 4.0 许可。）</p>
+        </section>
+      </article>
+    </main>
+
+    <footer class="footer">
+      <span class="footer-copy">原文版权 2026 Wang, Zhou, Liu, Zhu, and Xiao。CC-BY 4.0。中文翻译版遵循相同许可。</span>
+      <span class="footer-actions">
+        <a href="reader.html">在线阅读</a>
+        <a class="flag-counter" href="https://info.flagcounter.com/RLWT" target="_blank" rel="noopener" aria-label="在 Flag Counter 查看访问量">
+          <img src="https://s11.flagcounter.com/mini/RLWT/bg_FFFFFF/txt_43536B/border_CCCCCC/flags_0/" alt="Flag Counter 页面访问量">
+        </a>
+      </span>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,2104 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>在线读本 - RL without Tears（中文版）</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon/favicon-32.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="assets/favicon/apple-touch-icon.png">
+    <link rel="stylesheet" href="styles.css?v=20260911">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+    <script defer src="math.js"></script>
+    <style>
+      .zh-banner { background:#eef4fa; border-bottom:1px solid #cfe0ef; color:#2f5d8a; font-size:.85rem; padding:8px 24px; text-align:center; }
+      .zh-banner a { color:#2f5d8a; }
+    </style>
+  </head>
+  <body>
+    <div class="zh-banner">
+      本页为中文翻译版（AI 辅助翻译，非官方译本） ·
+      <a href="../../index.html">返回中文目录</a> ·
+      <a href="https://niutrans.github.io/RL-without-Tears/reader.html">英文原版读本</a> ·
+      <a href="../pdf/index.html">全书逐章中文翻译（PDF 版）</a>
+    </div>
+    <header class="topbar">
+      <a class="brand" href="index.html">RL without Tears（中文版）</a>
+      <nav class="topnav" aria-label="读本导航">
+        <a href="#introduction">引言</a>
+        <a href="#preliminaries">预备知识</a>
+        <a href="#rl-training">理解 RL</a>
+        <a href="#improved-rl">改进 RL</a>
+        <a href="#reasoning">推理</a>
+        <a href="#agents">智能体</a>
+        <a href="#multimodal">多模态</a>
+        <a href="#conclusion">未来方向</a>
+        <a href="cheatsheet.html">公式速查</a>
+        <a href="glossary.html">术语表</a>
+      </nav>
+    </header>
+
+    <main class="layout">
+      <aside class="sidebar" aria-label="章节导航">
+        <nav class="chapter-nav">
+          <details open>
+            <summary><a href="#introduction">1. 引言</a></summary>
+            <a class="nav-sub" href="#intro-motivation">LLM 为什么要用 RL？</a>
+            <a class="nav-sub" href="#intro-gap">本文要填补的空隙</a>
+            <a class="nav-sub" href="#intro-roadmap">路线图</a>
+          </details>
+          <details>
+            <summary><a href="#preliminaries">2. 预备知识</a></summary>
+            <a class="nav-sub" href="#llm-fundamentals">2.1 LLM 基础</a>
+            <a class="nav-sub" href="#rl-fundamentals">2.2 RL 基础</a>
+          </details>
+          <details>
+            <summary><a href="#rl-training">3. 理解 RL</a></summary>
+            <a class="nav-sub" href="#policy-gradient">3.1 策略梯度</a>
+            <a class="nav-sub" href="#temporal-decomposition">3.2 时序分解</a>
+            <a class="nav-sub" href="#variance-reduction">3.3 方差缩减</a>
+            <a class="nav-sub" href="#importance-sampling">3.4 重要性采样</a>
+            <a class="nav-sub" href="#ppo">3.5 PPO</a>
+            <a class="nav-sub" href="#reward-models">3.6 奖励模型</a>
+            <a class="nav-sub" href="#complete-workflow">3.7 完整工作流</a>
+          </details>
+          <details>
+            <summary><a href="#improved-rl">4. 改进 RL</a></summary>
+            <a class="nav-sub" href="#advanced-reward-models">4.1 更高级的奖励模型</a>
+            <a class="nav-sub" href="#better-advantage">4.2 优势估计</a>
+            <a class="nav-sub" href="#efficient-rl">4.3 高效 RL</a>
+            <a class="nav-sub" href="#dpo-section">4.4 DPO</a>
+          </details>
+          <details>
+            <summary><a href="#reasoning">5. 推理</a></summary>
+            <a class="nav-sub" href="#test-time-scaling">5.1 测试时扩展</a>
+            <a class="nav-sub" href="#iterative-rl">5.2 迭代式 RL</a>
+            <a class="nav-sub" href="#large-scale-rl">5.3 大规模 RL</a>
+            <a class="nav-sub" href="#opd-section">5.4 同策略蒸馏</a>
+          </details>
+          <details>
+            <summary><a href="#agents">6. 智能体</a></summary>
+            <a class="nav-sub" href="#agent-capabilities">6.1 智能体能力</a>
+            <a class="nav-sub" href="#environment-design">6.2 环境设计</a>
+            <a class="nav-sub" href="#credit-assignment">6.3 信用分配</a>
+            <a class="nav-sub" href="#agent-experience">6.4 从经验中学习</a>
+          </details>
+          <details>
+            <summary><a href="#multimodal">7. 多模态</a></summary>
+            <a class="nav-sub" href="#multimodal-understanding">7.1 多模态理解</a>
+            <a class="nav-sub" href="#multimodal-generation">7.2 多模态生成</a>
+          </details>
+          <details>
+            <summary><a href="#conclusion">8. 未来方向</a></summary>
+            <a class="nav-sub" href="#future-pretraining">面向预训练的 RL</a>
+            <a class="nav-sub" href="#future-efficiency">高效 RL</a>
+            <a class="nav-sub" href="#future-scaling">扩展极限</a>
+            <a class="nav-sub" href="#future-continual">自我进化 RL</a>
+          </details>
+          <a class="nav-section" href="#systems">附录</a>
+          <a class="nav-section" href="#references">参考文献</a>
+          <a class="nav-section" href="assets/rl-without-tears.pdf">英文完整 PDF</a>
+        </nav>
+      </aside>
+
+      <article class="content reader-content">
+
+        <section class="reader-title">
+          <p class="kicker">在线读本（中文版）</p>
+          <h1>RL without Tears</h1>
+          <p>
+            在线版遵循论文的章节结构，但组织成一条有引导的阅读路径，而非压缩版摘要。每一节都在回答上一节留下的问题：
+            LLM 策略是什么、奖励如何训练它、为什么 PPO 风格的 RLHF 需要稳定器、同一套反馈循环后来如何扩展到推理、
+            智能体与多模态模型。完整推导、参考文献与详细讨论仍以 PDF 论文为准。
+          </p>
+          <div class="lesson-map" aria-label="阅读路径">
+            <a href="#introduction">1. 动机</a>
+            <a href="#preliminaries">2. 把词元生成连到 RL 记号</a>
+            <a href="#rl-training">3. 一步步搭建 PPO 风格的 RLHF</a>
+            <a href="#improved-rl">4. 修补基础工作流的薄弱点</a>
+            <a href="#reasoning">5. 把可验证推理变成训练信号</a>
+            <a href="#agents">6. 把 RL 扩展到交互式智能体</a>
+            <a href="#multimodal">7. 把策略视角用到文本之外</a>
+            <a href="#conclusion">8. 未来方向</a>
+          </div>
+        </section>
+
+        <section class="chapter" id="introduction">
+          <p class="chapter-number">第 1 节</p>
+          <h2>引言</h2>
+          <p>
+            强化学习是一套“从反馈中改进行为”的框架。智能体做出决策、接收来自环境的信号，并调整自己的策略，
+            使未来的决策能收集到更高的奖励。传统教程往往从游戏、机器人或控制问题讲起；本教程则直接从 LLM 出发：
+            模型接收提示词，逐词元生成回答，并可以在回答或交互完成后被评估 <a class="citation" href="#ref-1">[1]</a>。
+          </p>
+
+          <h3 id="intro-motivation">LLM 为什么要用强化学习？</h3>
+          <p>
+            论文从一种简单的错位讲起。预训练和监督微调通过给 LLM 展示可模仿的文本来教它，但我们希望助手具备的许多能力，
+            “判断起来”比“穷举示范出来”更容易：有用性、偏好对齐、安全性、推理正确性、任务成败，往往都是完整行为的性质，
+            而非单个孤立词元的性质。RLHF 利用对生成回答的反馈，把预训练模型对齐到人类偏好；而近年的推理与智能体系统
+            则把同一思想推广为从验证器、工具、环境和积累的经验中学习 <a class="citation" href="#ref-3">[3]</a><a class="citation" href="#ref-2">[2]</a><a class="citation" href="#ref-12">[12]</a>。
+          </p>
+          <aside class="callout">
+            <strong>动机。</strong>
+            LLM 后训练日益依赖行为层面的反馈：模型先生成候选行为，行为被评估，优化则让更好的行为更可能出现。
+          </aside>
+          <figure class="quote-block">
+            <blockquote>
+              智能及其相关能力，可以被理解为服务于“智能体在其所处环境中对奖励的最大化”。
+              （Intelligence, and its associated abilities, can be understood as subserving the maximisation of reward
+              by an agent acting in its environment.）
+            </blockquote>
+            <figcaption>
+              - Silver, Singh, Precup, and Sutton <a class="citation" href="#ref-24">[24]</a>
+            </figcaption>
+          </figure>
+
+          <h3 id="intro-gap">本文要填补的空隙</h3>
+          <p>
+            对 NLP 研究者来说，困难的通常不是动机，而是“翻译层”。RL 论文谈状态、动作、策略、轨迹、回报、评论器和优势；
+            LLM 论文谈提示词、词元、对数概率、补全、偏好数据、奖励模型和 KL 惩罚。两套词汇描述的是相容的对象，
+            却常常由不同的例子引入。本教程要做的，就是在保留 RL 数学语言的同时，把每个概念都落到 LLM 训练的具体场景中。
+          </p>
+          <table class="concept-table compact">
+            <thead>
+              <tr>
+                <th>读者的疑问</th>
+                <th>论文如何回答</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>LLM 怎么就是策略了？</td><td>把提示与已生成前缀映射为状态，把下一个词元映射为动作。</td></tr>
+              <tr><td>为什么要用奖励，而不只用示范？</td><td>当精确的目标输出难以规定时，奖励可以直接评估生成的行为。</td></tr>
+              <tr><td>为什么需要价值函数和优势？</td><td>它们降低梯度方差，让策略优化更稳定。</td></tr>
+              <tr><td>PPO、GRPO、DPO 为何重要？</td><td>它们代表了从奖励或偏好反馈中优化策略的不同路线。</td></tr>
+            </tbody>
+          </table>
+
+          <h3 id="intro-roadmap">路线图</h3>
+          <p>
+            引言随后划定了论文的范围。教程按读者需要概念的顺序推进：第 2 节先建立通用记号——LLM 生成是一连串决策，
+            而 RL 给决策过程与反馈命名；第 3 节把这些记号变成一个完整的 PPO 风格 RLHF 工作流；第 4 节重审这个工作流，
+            追问它在哪里会失效或变得昂贵；第 5 到 7 节把同一套透镜应用于推理、智能体与多模态模型——在那里轨迹更长、
+            奖励更多样、信用分配更重要。
+          </p>
+          <div class="step-flow compact-flow" aria-label="论文路线图">
+            <div><span>2</span><strong>基础</strong><p>把提示、前缀、词元与补全翻译成状态、动作、策略与轨迹。</p></div>
+            <div><span>3</span><strong>RLHF 核心</strong><p>用一个 LLM 训练示例推出“奖励打分—策略更新”的循环。</p></div>
+            <div><span>4</span><strong>改进</strong><p>基础循环清楚之后，强化奖励、优势、效率与偏好优化。</p></div>
+            <div><span>5-7</span><strong>扩展</strong><p>沿同一套反馈逻辑进入推理、智能体与多模态模型。</p></div>
+          </div>
+        </section>
+
+        <section class="chapter" id="preliminaries">
+          <p class="chapter-number">第 2 节</p>
+          <h2>预备知识：LLM 与强化学习</h2>
+          <p>
+            在介绍策略梯度或 PPO 之前，教程先让故事的两侧使用同一种语言。LLM 这一侧，生成是“在提示和已生成前缀的条件下
+            做一连串下一词元决策”；RL 这一侧，学习是“策略做出的一连串决策，由沿轨迹的奖励来评价”。第 2 节把这两种观点
+            连接起来，使后面的算法都能被读成对熟悉的 LLM 对象的操作。
+          </p>
+          <p>
+            对 LLM 的回顾是有意做了取舍的：只覆盖那些之后会变成 RL 变量的概念——词元概率、提示词、监督微调、解码与采样输出。
+            它不打算取代完整的 LLM 综述；需要更广背景色者可参考
+            <a href="https://arxiv.org/pdf/2501.09223" target="_blank" rel="noopener">Foundations of Large Language Models</a>。
+          </p>
+          <aside class="lesson-card">
+            <h3>本节范围</h3>
+            <ul>
+              <li>LLM 生成就提供了决策过程：预测一个词元、拼接上去、继续。</li>
+              <li>预训练、提示、监督微调与推理，解释初始策略从哪里来。</li>
+              <li>MDP、状态、动作、策略、奖励、价值与轨迹，解释反馈如何改变这个策略。</li>
+              <li>桥梁是关键：提示加前缀是状态，下一个词元是动作，完整输出是轨迹。</li>
+            </ul>
+          </aside>
+
+          <h3 id="llm-fundamentals">2.1 LLM 基础</h3>
+          <p>
+            现代生成式 LLM 通常是仅解码器（decoder-only）Transformer。分词器先把原始文本转换成词表
+            \(\mathcal{V}\) 中的词元，模型再按从左到右的分解给词元序列 \(\mathbf{z}=z_1,\ldots,z_N\) 赋予概率。
+            这个分解对 RL 至关重要：一旦回答被写成下一词元概率的乘积，“改变某个采样回答的概率”就可以分解为
+            “改变构成它的各个词元的概率”。
+          </p>
+          <div class="equation">
+            \[
+              \mathrm{Pr}_{\theta}(\mathbf{z})
+              =
+              \prod_{i=1}^{N}\mathrm{Pr}_{\theta}(z_i\mid\mathbf{z}_{&lt;i}),
+              \qquad
+              \log \mathrm{Pr}_{\theta}(\mathbf{z})
+              =
+              \sum_{i=1}^{N}\log \mathrm{Pr}_{\theta}(z_i\mid\mathbf{z}_{&lt;i})
+            \]
+          </div>
+          <p class="notation-note">
+            其中 \(\mathbf{z}_{&lt;i}=z_1,\ldots,z_{i-1}\) 表示 \(z_i\) 之前的词元。因果自注意力保证每个位置的预测
+            只依赖于前面的词元。
+          </p>
+          <figure class="paper-figure">
+            <img src="assets/figures/fig-language-modeling-and-generation.gif" alt="语言模型训练与自回归生成示意">
+            <figcaption>语言模型训练与自回归生成。</figcaption>
+          </figure>
+
+          <h4>预训练</h4>
+          <p>
+            预训练从大规模无标注文本中学习通用语言能力。语料中的每个词元天然都是自监督目标：模型观察前文上下文，
+            学习预测下一个词元。若用 \(\mathcal{S}_{\mathrm{pre}}\) 表示预训练语料，其目标就是最大化所有词元对数似然的总和。
+          </p>
+          <div class="equation">
+            \[
+              \hat{\theta}
+              =
+              \arg\max_{\theta}
+              \sum_{\mathbf{z}\in\mathcal{S}_{\mathrm{pre}}}
+              \sum_{i=1}^{N}
+              \log \mathrm{Pr}_{\theta}(z_i\mid\mathbf{z}_{&lt;i})
+            \]
+          </div>
+          <p>
+            完成这一步后，模型能够产出流畅的续写，并吸收了数据中的语言与事实规律。但它的目标仍是“为文本建模”，
+            而不是“满足用户当前的意图”。正是这一局限引出了后面的适配机制：先用提示改变输入上下文，再用监督微调改变
+            模型参数，最后用基于奖励的学习改变行为。
+          </p>
+
+          <h4>提示（Prompting）</h4>
+          <p>
+            提示是一种简单轻量的方式，不更新参数就能让 LLM 适配不同任务。提示是用来引导模型完成某个任务或产出某种输出的
+            输入文本，可以包含指令、用户提供的内容、输出要求或示范示例。
+          </p>
+          <aside class="callout">
+            <strong>提示示例。</strong>
+            You are a homework assistant helping students improve their problem-solving skills. Give me three tips
+            to improve my accuracy in solving math problems. Please make the response clear, practical, and easy to follow.
+            （中文示意：你是一名作业辅导助手，帮助学生提高解题能力。请给我三条建议，提高我做数学题的正确率。回答要清晰、实用、易执行。）
+          </aside>
+          <p>
+            这个示例里，提示同时规定了任务和期望的回答风格，LLM 则通过续写输入序列来生成回答。提示也可以写成模板。
+            还是作业辅导场景，我们可以固定指令，只替换一个任务相关的占位符：
+          </p>
+          <aside class="callout">
+            <strong>提示模板。</strong>
+            You are a homework assistant helping students improve their problem-solving skills. Give me three tips
+            to improve my accuracy in solving <em>{subject}</em> problems. Please make the response clear, practical,
+            and easy to follow.
+            （中文示意：把 {subject} 换成具体科目，如数学、英语写作。）
+          </aside>
+          <p>
+            如果 <em>{subject}</em> 填入 "math"（数学），模板就变成上面的提示；填入 "English writing"（英语写作），
+            同一指令模式就复用到另一个任务上。这正是为什么在更新参数之前，提示通常是第一个被尝试的适配手段。
+          </p>
+          <p>
+            与提示相关的另一个重要概念是上下文学习（in-context learning）。把示范示例放进上下文，模型就能在回应新输入之前，
+            先从示例中推断期望的输入-输出模式。
+          </p>
+          <aside class="callout">
+            <strong>上下文学习示例。</strong><br>
+            <em>Input:</em> Give me two tips to improve my English writing.（给我两条提高英语写作的建议。）<br>
+            <em>Output:</em> 1. Read well-written essays regularly.<br>
+            2. Revise your sentences to make them clear.<br><br>
+            <em>Input:</em> Give me three tips to improve my accuracy in solving math problems.（给我三条提高数学题正确率的建议。）<br>
+            <em>Output:</em>
+          </aside>
+          <p>
+            不提供示范时，通常称为<em>零样本</em>（zero-shot）提示；提供一个示范，称为<em>单样本</em>（one-shot）提示；
+            提供若干示范，称为<em>少样本</em>（few-shot）提示。核心思想是：模型利用当前上下文中的示例来推断期望的
+            输入-输出模式，而无需修改参数。
+          </p>
+          <p>
+            上下文学习还可以与思维链（chain-of-thought，CoT）提示结合。CoT 提示鼓励模型在给出最终答案前生成中间推理步骤，
+            做法可以是直接要求模型“一步步推理”，也可以提供同时包含推理过程与答案的示范示例。
+          </p>
+          <aside class="callout">
+            <strong>CoT 示例。</strong><br>
+            <em>Input:</em> A student solves 8 math problems and gets 6 correct. What is the accuracy? Please reason
+            step by step.（一名学生做 8 道数学题对 6 道，正确率是多少？请一步步推理。）<br>
+            <em>Output:</em> The student gets 6 out of 8 problems correct. The accuracy is therefore \(6/8=0.75\),
+            or 75%.<br><br>
+            <em>Input:</em> A student solves 20 math problems and gets 17 correct. What is the accuracy? Please
+            reason step by step.（一名学生做 20 道题对 17 道，正确率是多少？请一步步推理。）<br>
+            <em>Output:</em>
+          </aside>
+          <p>
+            提示通过改变生成所用的上下文来适配 LLM，因此提示质量会强烈影响模型表现。同一个任务可以有多种写法，
+            例如 "Give me two tips to improve my English writing."（给我两条提高英语写作的建议）也可以写成
+            "What are two simple ways to improve my English writing skills?"（提高英语写作能力的两个简单方法是什么？）。
+            两个提示意图几乎相同，输出却可能明显不同。提示强大在于便宜，但它也暴露一个上限：如果模型本身并不可靠地
+            知道期望行为，只改上下文可能不够。监督微调要解决的正是这个问题：用“期望回答”的示例来更新模型。
+          </p>
+
+          <h4>监督微调（SFT）</h4>
+          <p>
+            监督微调使用带标注的输入-输出对，对预训练模型做进一步适配。输入 \(\mathbf{x}\) 通常由指令与用户内容组成，
+            输出 \(\mathbf{y}\) 是期望的回答。SFT 既教模型表达什么知识，也教它以遵循指令的格式来表达。
+          </p>
+          <table class="concept-table compact">
+            <thead>
+              <tr>
+                <th>任务</th>
+                <th>输入</th>
+                <th>输出</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>摘要</td>
+                <td>Summarize an article about rapid growth in solar energy.（总结一篇关于太阳能快速增长的文章。）</td>
+                <td>Solar energy has grown rapidly and become a major renewable source.</td>
+              </tr>
+              <tr>
+                <td>问答</td>
+                <td>What is the capital of France?（法国首都是哪里？）</td>
+                <td>Paris.</td>
+              </tr>
+              <tr>
+                <td>分类</td>
+                <td>Classify a prize-message as spam or not spam.（把一条中奖短信分为垃圾信息或非垃圾信息。）</td>
+                <td>Spam.</td>
+              </tr>
+              <tr>
+                <td>机器翻译</td>
+                <td>Translate "RL is widely used to train LLMs" into Chinese.（把 “RL is widely used to train LLMs” 翻译成中文。）</td>
+                <td>强化学习被广泛用于训练大语言模型。</td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="equation">
+            \[
+              \tilde{\theta}
+              =
+              \arg\max_{\hat{\theta}^{+}}
+              \sum_{(\mathbf{x},\mathbf{y})\in\mathcal{S}}
+              \log \mathrm{Pr}_{\hat{\theta}^{+}}(\mathbf{y}\mid\mathbf{x})
+            \]
+          </div>
+          <p>
+            其中 \(\mathcal{S}\) 是带标注的数据，\(\tilde{\theta}\) 是经 SFT 优化后的参数，
+            \(\hat{\theta}^{+}\) 表示在预训练参数 \(\hat{\theta}\) 基础上的调整。微调从预训练参数出发，而不是随机初始化。
+          </p>
+          <div class="equation">
+            \[
+              \log \mathrm{Pr}_{\theta}(\mathbf{y}\mid\mathbf{x})
+              =
+              \sum_{t=1}^{T}
+              \log \mathrm{Pr}_{\theta}(y_t\mid\mathbf{x},\mathbf{y}_{&lt;t})
+            \]
+          </div>
+          <p>
+            这个形式等价于在输出段上最小化交叉熵损失。实践中，输入词元只作上下文，损失通常只在输出词元上计算。
+            得到的 SFT 模型常作为后续强化学习训练的起点策略：它已经能遵循任务格式，但可能仍需要反馈，
+            才能在多个都可接受的回答中更倾向于某一个。
+          </p>
+
+          <h4>推理（Inference）</h4>
+          <p>
+            推理是把训练好的 LLM 应用到新输入上。给定提示 \(\mathbf{x}\)，模型先预测第一个输出词元上的分布，
+            由解码策略选出词元、拼接到上下文，再重复这一自回归过程，直到到达停止条件。
+          </p>
+          <table class="concept-table compact">
+            <thead>
+              <tr>
+                <th>解码策略</th>
+                <th>如何选择下一个词元</th>
+                <th>权衡</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>贪心解码</td>
+                <td>每步选择概率最高的词元。</td>
+                <td>快且确定，但局部最优选择可能损害整条序列。</td>
+              </tr>
+              <tr>
+                <td>束搜索</td>
+                <td>保留得分最高的 \(B\) 个候选前缀，逐步扩展。</td>
+                <td>探索更多候选，但计算与内存开销更大。</td>
+              </tr>
+              <tr>
+                <td>采样</td>
+                <td>从 \(\mathrm{Pr}_{\theta}(\cdot\mid\mathbf{x},\mathbf{y}_{&lt;t})\) 中采样，常配合温度、top-\(k\) 或 top-\(p\) 过滤。</td>
+                <td>产出多样的输出，与 RL 中的随机策略采样非常相似。</td>
+              </tr>
+            </tbody>
+          </table>
+          <p>
+            这种“逐词元生成”的视角，是通向 RL 的关键桥梁：在时间步 \(t\)，当前上下文 \((\mathbf{x},\mathbf{y}_{&lt;t})\)
+            可视为状态，所选词元 \(y_t\) 是动作，模型分布就是策略。采样尤其重要，因为它产生之后被赋予奖励的候选轨迹。
+          </p>
+
+          <h3 id="rl-fundamentals">2.2 强化学习基础</h3>
+          <p>
+            LLM 一侧就位后，RL 一侧就容易读了。RL 提供了从反馈中学习的框架：智能体观察状态、按策略选择动作、
+            获得奖励、转移到新状态。对 LLM 来说，当精确示范难以给出、但生成的行为仍能被人类、奖励模型、规则、验证器
+            或环境评判时，这一框架最有用。
+          </p>
+          <figure class="paper-figure">
+            <img src="assets/figures/fig-llm-and-rl-elements.gif" alt="把 LLM 生成映射到 RL 要素的示意">
+            <figcaption>LLM 强化学习的要素示意：提示、已生成前缀、词元、奖励与价值估计如何对应到标准 RL 要素。</figcaption>
+          </figure>
+          <p>
+            这一交互过程通常被建模为马尔可夫决策过程（MDP）。轨迹是状态与动作的序列
+            \(\tau=(s_0,a_0,s_1,a_1,\ldots,s_{H-1},a_{H-1})\)，其优劣由累计奖励评价。目标是学到一个策略，
+            使期望累计奖励最大。
+          </p>
+          <div class="equation">
+            \[
+              \pi^{*}
+              =
+              \arg\max_{\pi}
+              \mathbb{E}\left[
+                \sum_{t=0}^{H-1}r_t
+                \mid \pi
+              \right]
+            \]
+          </div>
+          <p>
+            在 LLM 训练中，“采样”就是从当前策略生成一条或多条轨迹。轨迹可以是一次补全、一条推理轨迹、
+            一段工具调用交互或多模态生成路径。一旦轨迹得到反馈，RL 算法就更新策略，使更好的行为更可能出现。
+          </p>
+          <table class="concept-table rl-mapping-table">
+            <colgroup>
+              <col class="rl-element-col">
+              <col class="rl-interpretation-col">
+            </colgroup>
+            <thead>
+              <tr>
+                <th>要素</th>
+                <th>解读</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>智能体（Agent）</td>
+                <td>强化学习中的学习者或决策者。在 LLM 场景下，智能体对应语言模型本身：它逐词元生成，并依据反馈信号更新自己的行为。</td>
+              </tr>
+              <tr>
+                <td>环境（Environment）</td>
+                <td>智能体之外与它交互的一切。与涉及物理或仿真环境的传统强化学习设定不同，基于 LLM 的强化学习中环境通常是抽象的：由提供反馈的训练框架构成，例如对生成输出打分的奖励模型、人工标注或评估指标。</td>
+              </tr>
+              <tr>
+                <td>状态 \((s)\)</td>
+                <td>状态表示环境当前的情形。对语言建模而言，时间步 \(t\) 的状态可以定义为到该点为止已观察到的词元序列，即用于预测下一个词元的上下文。形式上 \(s_t=(\mathbf{x},\mathbf{y}_{&lt;t})\)，其中 \(\mathbf{x}\) 是输入提示，\(\mathbf{y}_{&lt;t}\) 是此前生成的词元。</td>
+              </tr>
+              <tr>
+                <td>动作 \((a)\)</td>
+                <td>动作对应智能体做出的决策。在 LLM 中，动作自然地定义为从词表中选择下一个词元，即 \(a_t=y_t\)。</td>
+              </tr>
+              <tr>
+                <td>奖励 \((r)\)</td>
+                <td>奖励是环境对动作质量的反馈。一般来说，奖励函数可定义为 \(r(s,a,s')\)，表示智能体从状态 \(s\) 经动作 \(a\) 转移到 \(s'\) 时获得的反馈；时间步 \(t\) 写作 \(r_t=r(s_t,a_t,s_{t+1})\)。在确定性场景中，下一状态由 \((s_t,a_t)\) 唯一决定，奖励可简化为 \(r(s_t,a_t)\)。</td>
+              </tr>
+              <tr>
+                <td>策略 \((\pi)\)</td>
+                <td>策略定义了智能体的行为，即在给定状态下采取某动作的概率。对 LLM 而言，策略对应“给定上下文时下一个词元的条件分布”：\(\pi_{\theta}(a_t\mid s_t)=\mathrm{Pr}_{\theta}(y_t\mid\mathbf{x},\mathbf{y}_{&lt;t})\)，其中 \(a_t=y_t\)、\(s_t=(\mathbf{x},\mathbf{y}_{&lt;t})\)。在这种表述下，LLM 天然可以被理解为一个参数化策略。</td>
+              </tr>
+              <tr>
+                <td>价值函数<br>\((V\) 与 \(Q)\)</td>
+                <td>价值函数估计“遵循某策略时的期望累计奖励”。状态价值函数 \(V(s)\) 度量从状态 \(s\) 出发的期望折扣回报；动作价值函数 \(Q(s,a)\) 则进一步对初始动作做条件化。</td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="equation">
+            \[
+              V(s)
+              =
+              \mathbb{E}\left[
+                \sum_{t=0}^{\infty}\gamma^t r_t
+                \mid s_0=s,\pi
+              \right],
+              \qquad
+              Q(s,a)
+              =
+              \mathbb{E}\left[
+                \sum_{t=0}^{\infty}\gamma^t r_t
+                \mid s_0=s,a_0=a,\pi
+              \right]
+            \]
+          </div>
+          <p class="notation-note">
+            有了这些对应关系，本教程余下部分就能用熟悉的语言模型对象——上下文、词元、对数概率、奖励、价值与采样输出——
+            来描述强化学习算法。
+          </p>
+        </section>
+
+        <section class="chapter" id="rl-training">
+          <p class="chapter-number">第 3 节</p>
+          <h2>理解 LLM 训练中的强化学习</h2>
+          <p>
+            第 2 节把 LLM 生成映射成 RL 记号之后，第 3 节展示这套机器在真实 LLM 训练场景中如何运转。贯穿全节的示例是
+            一个作业辅导助手：它的 SFT 回答是正确的，但太短了。这个例子很好用，因为期望的改进“容易判断、却难以写成
+            一个标准答案”。与其再写许多新示范，不如对生成的输出定义反馈，并用强化学习让被偏好的行为更可能出现。
+          </p>
+          <p>
+            本节按依赖顺序展开这套工作流：策略梯度解释标量奖励如何更新一个随机语言模型；时序分解解释回答级奖励如何
+            作用于词元级决策；基线与优势降低更新的噪声；重要性采样与 PPO 让“从采样数据反复更新”更稳定；奖励建模随后
+            用学到的偏好分数取代人工手写的反馈；最后所有部件组装成标准的基于 PPO 的 RLHF 循环。
+          </p>
+          <div class="step-flow" aria-label="RLHF 训练循环">
+            <div><span>1</span><strong>采样</strong><p>从策略生成输出。</p></div>
+            <div><span>2</span><strong>打分</strong><p>用奖励评估输出。</p></div>
+            <div><span>3</span><strong>估计</strong><p>计算价值或优势。</p></div>
+            <div><span>4</span><strong>更新</strong><p>在 PPO 风格约束下优化策略。</p></div>
+          </div>
+
+          <h3 id="policy-gradient">3.1 策略梯度</h3>
+          <p>
+            策略梯度方法回答第一个训练问题：如果我们只能给“完成的样本”打分，如何更新产生它们的模型？在 LLM 训练中，
+            策略就是生成词元上的条件分布。既然无法枚举所有可能的输出，期望奖励就只能用采样的回答来估计。
+          </p>
+          <div class="derivation">
+            <p class="derivation-label">从论文的 LLM 记号出发</p>
+            <div class="equation">
+              \[
+                \begin{aligned}
+                  J(\theta)
+                  &=
+                  \mathbb{E}_{\mathbf{x}\sim\mathcal{S}_{x}}
+                  \left[
+                    \sum_{\mathbf{y}\in\Omega}
+                    \mathrm{Pr}_{\theta}(\mathbf{y}\mid\mathbf{x})
+                    R(\mathbf{y})
+                  \right] \\
+                  &=
+                  \mathbb{E}_{\mathbf{x}\sim\mathcal{S}_{x}}
+                  \left[
+                    \sum_{\mathbf{y}\in\Omega}
+                    \mathrm{Pr}_{\theta}(\mathbf{y}\mid\mathbf{x})
+                    \sum_{t=1}^{T}r_t
+                  \right]
+                \end{aligned}
+              \]
+            </div>
+            <p>
+              假设空间 \(\Omega\) 大到无法枚举，论文用采样的输出
+              \(\mathcal{D}=\{\mathbf{y}_1,\ldots,\mathbf{y}_d\}\) 来近似它。
+            </p>
+            <div class="equation">
+              \[
+                \begin{aligned}
+                  \frac{\partial J(\theta)}{\partial\theta}
+                  &=
+                  \mathbb{E}_{\mathbf{x}\sim\mathcal{S}_{x}}
+                  \left[
+                    \sum_{\mathbf{y}\in\mathcal{D}}
+                    \mathrm{Pr}_{\theta}(\mathbf{y}\mid\mathbf{x})
+                    \frac{\partial \log\mathrm{Pr}_{\theta}(\mathbf{y}\mid\mathbf{x})}{\partial\theta}
+                    R(\mathbf{y})
+                  \right] \\
+                  \frac{\partial J(\theta)}{\partial\theta}
+                  &=
+                  \mathbb{E}_{\mathbf{x}\sim\mathcal{S}_{x}}
+                  \left[
+                    \frac{1}{d}
+                    \sum_{\mathbf{y}\in\mathcal{D}}
+                    \frac{\partial \log\mathrm{Pr}_{\theta}(\mathbf{y}\mid\mathbf{x})}{\partial\theta}
+                    R(\mathbf{y})
+                  \right]
+                \end{aligned}
+              \]
+            </div>
+          </div>
+          <div class="equation">
+            \[
+              \nabla J(\theta)
+              =
+              \mathbb{E}_{\tau\sim \pi_{\theta}}
+              \left[
+                R(\tau)\nabla_{\theta}\log \pi_{\theta}(\tau)
+              \right]
+            \]
+          </div>
+          <p class="notation-note">
+            这里 \(J(\theta)\) 表示策略目标，\(\pi_{\theta}\) 是由 \(\theta\) 参数化的策略模型，\(\tau\) 表示采样的轨迹。
+            \(R(\tau)\) 是赋给该轨迹的累计奖励，\(\nabla_{\theta}\log \pi_{\theta}(\tau)\) 是当前策略下轨迹对数概率的梯度。
+          </p>
+          <p>
+            策略梯度形式之所以好用，是因为奖励本身不需要可微。奖励可以来自人工标注员、训练好的奖励模型、基于规则的检查器
+            或外部环境。模型更新只需要采样轨迹在当前策略下的对数概率 <a class="citation" href="#ref-1">[1]</a>。
+          </p>
+          <aside class="callout">
+            <strong>要点。</strong>
+            策略梯度不会反向传播穿过奖励来源。它只是根据被赋给的奖励，改变采样行为出现的概率。
+          </aside>
+          <figure class="paper-figure">
+            <img src="assets/figures/fig-policy-gradient.gif" alt="面向 LLM 的策略梯度训练示意">
+            <figcaption>策略梯度会提高获得较高奖励的采样输出的概率。</figcaption>
+          </figure>
+          <p>
+            于是，奖励高的采样回答被赋予更高概率，奖励低的被赋予更低概率。接下来的小节将对这一基本策略梯度原则做细化，
+            以应对长序列、噪声奖励和不稳定更新。
+          </p>
+
+          <h3 id="temporal-decomposition">3.2 时序分解</h3>
+          <p>
+            基本的策略梯度表达式给整个回答打分，但 LLM 是通过词元概率被更新的。时序分解把这两个层面连接起来：
+            生成的回答由词元组成，完整回答的概率可以分解为词元级概率，序列级奖励因此能够作用于产生这条序列的各个决策。
+          </p>
+          <div class="derivation">
+            <p class="derivation-label">论文中的时间步分解</p>
+            <div class="equation">
+              \[
+                \begin{aligned}
+                  \frac{\partial \log \mathrm{Pr}_{\theta}(\mathbf{y}\mid\mathbf{x})}{\partial\theta}
+                  R(\mathbf{y})
+                  &=
+                  \left(
+                    \sum_{t=1}^{T}
+                    \frac{\partial \log \mathrm{Pr}_{\theta}(y_t\mid\mathbf{x},\mathbf{y}_{&lt;t})}{\partial\theta}
+                  \right)
+                  \left(
+                    \sum_{k=1}^{T}r_k
+                  \right) \\
+                  &=
+                  \sum_{t=1}^{T}
+                  \frac{\partial \log \mathrm{Pr}_{\theta}(y_t\mid\mathbf{x},\mathbf{y}_{&lt;t})}{\partial\theta}
+                  \left(
+                    \sum_{k=1}^{t-1}r_k
+                    +
+                    \sum_{k=t}^{T}r_k
+                  \right)
+                \end{aligned}
+              \]
+            </div>
+            <p>
+              在第 \(t\) 个生成步骤，\(y_t\) 不影响“过去奖励”项 \(\sum_{k=1}^{t-1}r_k\)。论文因此去掉该项，
+              只保留从 \(t\) 开始的未来回报。
+            </p>
+            <div class="equation">
+              \[
+                \frac{\partial J(\theta)}{\partial\theta}
+                =
+                \mathbb{E}_{\mathbf{x}\sim\mathcal{S}_{x}}
+                \left[
+                  \frac{1}{d}
+                  \sum_{\mathbf{y}\in\mathcal{D}}
+                  \sum_{t=1}^{T}
+                  \frac{\partial \log \mathrm{Pr}_{\theta}(y_t\mid\mathbf{x},\mathbf{y}_{&lt;t})}{\partial\theta}
+                  \sum_{k=t}^{T}r_k
+                \right]
+              \]
+            </div>
+          </div>
+          <p>
+            难点在于：序列级奖励并不能直接告诉我们哪个词元导致了成功或失败。一个正确答案可能包含大量与奖励无关的普通词元；
+            一个错误答案可能只因开头一处推理错误而错。因此，时序分解给出了训练的数学通路，却没有彻底解决信用分配问题。
+          </p>
+          <p>
+            输出越长，这个问题越严重。短回答中，把所有词元赋同样的奖励或许可以接受；在推理轨迹和智能体轨迹里，
+            单个最终奖励太粗糙了。后文因此会讨论过程奖励、验证器与智能体的信用分配。
+          </p>
+
+          <h3 id="variance-reduction">3.3 降低梯度方差</h3>
+          <p>
+            时序分解给了每个词元一个学习信号，但这个信号可能非常嘈杂。直接使用原始奖励，可能仅仅因为某些动作出现在一条
+            总体不错的轨迹里，就提高它们的概率——即使这些动作相对当前状态并不比平常更好。为了降低方差，
+            策略梯度方法引入了基线与优势。
+          </p>
+          <div class="equation">
+            \[
+              A(s,a)=Q(s,a)-V(s)
+            \]
+          </div>
+          <p class="notation-note">
+            这里 \(A(s,a)\) 表示在状态 \(s\) 采取动作 \(a\) 的优势；\(Q(s,a)\) 表示在状态 \(s\) 先采取动作 \(a\) 之后的
+            期望回报；\(V(s)\) 表示在该策略下从状态 \(s\) 出发的期望回报。
+          </p>
+          <p>
+            优势衡量的是：某个动作是否优于同一状态下的期望行为。价值模型估计期望未来奖励；减去这个基线，既能保持期望梯度
+            的正确性，又能让更新更稳定。
+          </p>
+          <p>
+            在 LLM 中，价值模型常通过“复用预训练主干 + 加一个标量头”来实现。它们在结构上像奖励模型，功能却不同：
+            奖励模型评价一个输出；价值模型估计当前策略下某个状态的期望回报。
+          </p>
+          <table class="concept-table">
+            <thead>
+              <tr>
+                <th>模型</th>
+                <th>在 PPO 风格 RLHF 中的角色</th>
+                <th>是否被更新？</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>策略模型</td><td>生成输出，并接受策略梯度更新。</td><td>是。</td></tr>
+              <tr><td>奖励模型</td><td>用学到的偏好信号给生成的输出打分。</td><td>在策略优化期间通常固定。</td></tr>
+              <tr><td>价值模型</td><td>预测期望回报，用于估计优势。</td><td>是。</td></tr>
+              <tr><td>参考模型</td><td>正则化策略，限制过度漂移。</td><td>否。</td></tr>
+            </tbody>
+          </table>
+
+          <h3 id="importance-sampling">3.4 重要性采样</h3>
+          <p>
+            优势让更新不再那么嘈杂之后，另一个现实问题出现了：数据可能已经有点“过期”。采样输出常由策略的旧版本生成，
+            而优化发生在一个或多个参数更新之后。重要性采样用当前策略与旧策略之间的概率比来校正这种不匹配。
+          </p>
+          <div class="equation">
+            \[
+              \rho_t(\theta)=
+              \frac{\pi_{\theta}(a_t\mid s_t)}
+                   {\pi_{\theta_{\mathrm{old}}}(a_t\mid s_t)}
+            \]
+          </div>
+          <p class="notation-note">
+            这里 \(\rho_t(\theta)\) 表示时间步 \(t\) 的重要性采样比；\(\pi_{\theta}\) 是当前策略；
+            \(\pi_{\theta_{\mathrm{old}}}\) 是产生该采样动作的旧策略；\(s_t\) 是状态，\(a_t\) 是在该状态下采取的动作。
+          </p>
+          <p>
+            这个比值之所以必要，是因为数据新鲜度很重要：如果学习者离产生样本的策略太远地更新，样本就越来越不可靠。
+            论文用一个糟糕的采样步骤来说明这一点——若不控制参考策略，它会拖累后续的生成质量。
+          </p>
+          <figure class="paper-figure">
+            <img src="assets/figures/fig-importance-terrible-step.png" alt="糟糕的采样步骤如何影响后续采样">
+            <figcaption>一次糟糕的更新会影响之后的采样；对参考策略的约束可以限制这种漂移。</figcaption>
+          </figure>
+
+          <h3 id="ppo">3.5 近端策略优化（PPO）</h3>
+          <p>
+            重要性采样告诉优化器“当前策略与产生样本的策略差多远”，PPO 则在这个差异周围装上护栏。它的核心思想是：
+            在目标函数里裁剪重要性比，阻止策略在一次更新中变化过大 <a class="citation" href="#ref-4">[4]</a>。
+          </p>
+          <figure class="paper-figure">
+            <img src="assets/figures/fig-ppo-clip.png" alt="PPO 对正负优势的裁剪示意">
+            <figcaption>无论优势为正还是为负，PPO 都会裁剪更新。</figcaption>
+          </figure>
+          <div class="equation">
+            \[
+              \min\left(
+                \rho_t A_t,
+                \mathrm{clip}(\rho_t,1-\epsilon,1+\epsilon)A_t
+              \right)
+            \]
+          </div>
+          <p class="notation-note">
+            这里 \(\rho_t\) 是当前与旧策略的概率比，\(A_t\) 是时间步 \(t\) 估计的优势。裁剪范围
+            \([1-\epsilon,1+\epsilon]\) 限制了单次更新中策略能改变的幅度。
+          </p>
+          <p>
+            若优势为正，模型被鼓励提高该动作的概率，但只允许在有界的范围内；若优势为负，模型被鼓励降低概率，同样有限度。
+            这使 PPO 很适合 RLHF——在那里，过度的奖励优化会损害语言质量，或利用奖励模型的弱点。
+          </p>
+          <div class="equation">
+            \[
+              \mathcal{L}(\theta)
+              =
+              -
+              \mathbb{E}_{\mathbf{x}\sim\mathcal{S}_{x}}
+              \mathbb{E}_{\mathbf{y}\sim\mathrm{Pr}_{\theta_{\mathrm{ref}}}(\cdot\mid\mathbf{x})}
+              \left[
+                \sum_{t=1}^{T}
+                \left(
+                  \mathrm{Clip}\left(
+                    \frac{\mathrm{Pr}_{\theta}(y_t\mid\mathbf{x},\mathbf{y}_{&lt;t})}
+                         {\mathrm{Pr}_{\theta_{\mathrm{ref}}}(y_t\mid\mathbf{x},\mathbf{y}_{&lt;t})}
+                    A_t
+                  \right)
+                  -
+                  \beta \mathrm{Penalty}_t
+                \right)
+              \right]
+            \]
+          </div>
+          <p class="notation-note">
+            这就是论文中的 PPO 损失：裁剪后的优势项更新策略，\(\beta \mathrm{Penalty}_t\) 约束偏离参考模型的漂移。
+          </p>
+          <aside class="callout">
+            <strong>惩罚项。</strong>
+            论文中的时间步惩罚为
+            \[
+              \mathrm{Penalty}_t
+              =
+              \log \mathrm{Pr}_{\theta}(y_t\mid\mathbf{x},\mathbf{y}_{&lt;t})
+              -
+              \log \mathrm{Pr}_{\theta_{\mathrm{ref}}}(y_t\mid\mathbf{x},\mathbf{y}_{&lt;t}).
+            \]
+            它衡量当前策略在同一采样词元上偏离参考策略的程度。系数 \(\beta\) 是该惩罚的权重。
+          </aside>
+
+          <h3 id="reward-models">3.6 训练奖励模型</h3>
+          <p>
+            到这里，奖励可以想象成一个简单的分数。RLHF 需要一种可规模化的方式，为大量采样回答产生这个分数，
+            因此通常在策略优化之前先训练奖励模型。奖励模型把输入-输出对映射为标量分数，常用成对偏好数据训练：
+            由人类或 AI 评审在两个候选回答中挑出更好的那个 <a class="citation" href="#ref-5">[5]</a>。
+          </p>
+          <p>
+            论文先介绍几种收集反馈的方式：评分（Rating）请标注者给出数值分数；列表式排序（Listwise ranking）请其对一组
+            候选输出排序；成对比较（Pairwise comparison）请其在同一输入的两个输出中选出更好者。成对比较被广泛采用，
+            因为它通常比给出绝对分数更容易、更可靠。
+          </p>
+          <div class="equation">
+            \[
+              \mathcal{L}_{\mathrm{RM}}
+              =
+              -\log \sigma\left(r_{\phi}(\mathbf{x},\mathbf{y}_w)-r_{\phi}(\mathbf{x},\mathbf{y}_l)\right)
+            \]
+          </div>
+          <p class="notation-note">
+            这里 \(\mathcal{L}_{\mathrm{RM}}\) 是奖励模型损失；\(r_{\phi}\) 是由 \(\phi\) 参数化的奖励模型；\(\mathbf{x}\) 是输入；
+            \(\mathbf{y}_w\) 是被偏好的输出序列，\(\mathbf{y}_l\) 是被拒绝的输出序列。sigmoid 函数把奖励差转换为偏好概率。
+          </p>
+          <p>
+            成对比较之所以常用，是因为相比绝对数值分数，它的标注往往更可靠。训练完成后，奖励模型可以为大量新生成的回答打分，
+            为策略优化提供可规模化的信号。
+          </p>
+          <figure class="paper-figure">
+            <img src="assets/figures/fig-rm-pairwise.gif" alt="成对奖励模型损失示意：被偏好与被拒绝的输出">
+            <figcaption>奖励模型学习给被偏好的回答打更高的分数。</figcaption>
+          </figure>
+          <p>
+            在策略优化期间，奖励模型通常独立地对完整输入-输出对打分。这意味着奖励往往是稀疏的：中间词元得不到直接奖励，
+            只有最后一个词元拿到奖励模型的分数。这一局限正是后文要讨论奖励塑形、过程奖励模型与步骤级验证的原因之一。
+          </p>
+
+          <h3 id="complete-workflow">3.7 一个完整的工作流</h3>
+          <p>
+            本节最后把各组件组合成标准的基于 PPO 的 RLHF 工作流：先由偏好数据训练奖励模型；策略采样输出；
+            奖励模型为输出打分；价值模型估计优势；PPO 在参考策略约束下更新策略。
+          </p>
+          <figure class="paper-figure">
+            <img src="assets/figures/fig-ppo-workflow.gif" alt="RLHF 的基于 PPO 的优化工作流">
+            <figcaption>基于 PPO 的 RLHF 循环把采样、奖励打分、价值估计与策略更新组合在一起。</figcaption>
+          </figure>
+          <p>
+            这个工作流说明，RLHF 不只是一个算法目标：它是一个训练系统，涉及数据生成、奖励推断、KL 正则化、优势估计、
+            优化与评估。有了系统视角，下一章就顺理成章——许多现代方法都可以理解为：让这套循环中的某个组件更可靠、
+            更便宜或更易优化 <a class="citation" href="#ref-2">[2]</a>。
+          </p>
+          <aside class="recap-card">
+            <h3>本节小结</h3>
+            <p>
+              理解 PPO 风格 RLHF 的最好方式是把它当作系统：策略负责采样，奖励模型负责打分，价值模型估计优势，
+              参考模型确保优化不会漂得太远。
+            </p>
+          </aside>
+        </section>
+
+        <section class="chapter" id="improved-rl">
+          <p class="chapter-number">第 4 节</p>
+          <h2>面向 LLM 的改进强化学习</h2>
+          <p>
+            第 3 节搭好了基础的 PPO 风格 RLHF 工作流。第 4 节继续盯着同一套工作流，追问它在现代 LLM 规模下变得实用之前
+            必须改进什么。讨论围绕四个压力点组织：如何构造更好的奖励、如何在不引入过多方差或成本的情况下估计优势、
+            如何在在线训练中少花算力，以及何时用直接偏好学习取代“显式奖励模型 + 强化学习”的流水线。
+          </p>
+          <table class="concept-table">
+            <thead>
+              <tr>
+                <th>问题</th>
+                <th>讨论的方法</th>
+                <th>主要收益</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>稀疏或质量差的奖励</td><td>奖励塑形、基于规则的奖励、过程奖励。</td><td>提供更稠密或更可靠的反馈。</td></tr>
+              <tr><td>奖励模型的局限</td><td>生成式奖励模型、评分细则奖励、奖励模型评估。</td><td>提升对齐效果与评估透明度。</td></tr>
+              <tr><td>评论器昂贵或不稳定</td><td>TD、GAE、GRPO、免价值模型的优势估计。</td><td>改善偏差-方差与系统成本的权衡。</td></tr>
+              <tr><td>流水线复杂</td><td>DPO 及相关直接偏好方法。</td><td>无需显式在线 RL 循环，直接从偏好对优化。</td></tr>
+            </tbody>
+          </table>
+          <p>
+            本节的顺序与训练循环一致。先讲奖励，因为奖励决定策略将学到什么；接着讲优势估计，因为奖励必须转化为稳定的
+            词元级更新；再讲效率，因为采样与打分才是现实成本的大头；最后讲 DPO，因为它改变的是流水线本身。
+          </p>
+
+          <h3 id="advanced-reward-models">4.1 更高级的奖励模型</h3>
+          <p>
+            奖励的构造强烈决定策略学到什么。若奖励稀疏、有噪声、有偏或容易被钻空子，策略优化就可能产生“分数漂亮、
+            却不符合真实目标”的行为。因此，现代 LLM 强化学习对奖励设计的重视与日俱增。
+          </p>
+
+          <h3 id="automatic-preference-data">4.1.1 自动偏好数据生成</h3>
+          <p>
+            第一个问题是数据。人类偏好标签有用，但昂贵且主观。一种可规模化的替代方案，是请一个强模型或验证器来比较候选输出。
+            在论文的作业辅导示例里，评审会看到输入与两个候选回答，然后选出信息更丰富、更准确、更清晰、更有帮助的那个。
+          </p>
+          <p>
+            这使偏好数据更容易扩展，因为系统与标签都可以自己生成。但论文也强调风险：AI 反馈可能继承位置偏置、
+            评审模型自身的偏好，以及评审提示里的错误。实践中常用提示设计、示范示例、多样化的候选生成、
+            以及人机反馈混合等手段来提高生成偏好数据的质量与多样性。
+          </p>
+
+          <h3 id="reward-shaping-section">4.1.2 奖励塑形</h3>
+          <p>
+            第二个问题是稀疏。标准奖励模型常常在整个回答生成完之后只给一个分数。这种延迟奖励很难回溯分配到各个词元决策上，
+            对长推理轨迹或智能体轨迹尤其如此。奖励塑形的应对办法是加入中间奖励，把学习信号变稠密。
+          </p>
+          <p>
+            例如，LLM 可以在答案末尾从奖励模型拿到延迟奖励，同时因格式合法、中间推理正确、或部分进展有用而获得中间奖励。
+            论文把这个想法与基于势函数的塑形联系起来：
+          </p>
+          <div class="equation">
+            \[
+              r'_t=r_t+f(\mathbf{x},\mathbf{y}_{&lt;t},y_t),
+              \qquad
+              f=\gamma\Phi(\mathbf{x},\mathbf{y}_{&lt;t+1},y_{t+1})-\Phi(\mathbf{x},\mathbf{y}_{&lt;t},y_t)
+            \]
+          </div>
+          <p>
+            当势函数取价值函数时，这一形式与优势估计紧密相关。要紧的告诫是：塑形奖励必须始终与最终目标保持一致，
+            否则模型优化的可能是中间信号，而不是我们真正想要的行为。
+          </p>
+
+          <h3 id="reward-generalization">4.1.3 提升奖励泛化</h3>
+          <p>
+            第三个问题是泛化。强化学习过程中策略在变化，开始产生与“训练奖励模型所用偏好数据”不同的输出。
+            一个在静态验证集上表现良好的奖励模型，仍可能在策略学会利用它的弱点时失效。
+          </p>
+          <p>
+            这种失败模式常被称为奖励投机（reward hacking）或过度优化（overoptimization）：奖励模型分数上升，
+            模型行为的真实质量却没有。论文介绍了几种现实防御：集成多个奖励模型以减少单模型错误；参数冻结与正则化
+            有助于保留底层 LLM 的通用特征；更多样的偏好数据能降低“奖励模型只在狭窄分布上有效”的风险。
+          </p>
+          <aside class="callout warning">
+            <strong>要警惕的失败模式。</strong>
+            如果奖励比期望行为“更容易被钻空子”，策略优化就可能一边提高奖励模型分数，一边降低真实的有用性。
+          </aside>
+
+          <h3 id="generative-rm">4.1.4 生成式奖励模型</h3>
+          <p>
+            传统奖励模型通常给输出打一个标量分数。生成式奖励模型则把偏好判断表述为语言建模任务：
+            模型接收提示、输入与候选输出，生成一个标签或判断词元
+            <a class="citation" href="#ref-6">[6]</a>。
+          </p>
+          <figure class="paper-figure">
+            <img src="assets/figures/fig-generative-rm.gif" alt="生成式奖励模型架构示意">
+            <figcaption>生成式奖励模型用 LLM 式的生成目标来预测偏好标签。</figcaption>
+          </figure>
+          <p>
+            这种表述能利用 LLM 的推理能力与指令遵循行为。当评估需要按细致入微的标准比较回答、而不仅是独立打一个标量分时，
+            它尤其有用。
+          </p>
+
+          <h3 id="rubric-rm">4.1.5 基于评分细则的奖励模型</h3>
+          <p>
+            基于评分细则（rubric）的奖励模型让评估标准显式化。评分细则不要求一个不透明的整体偏好，
+            而是规定正确性、完整性、遵循指令、安全性、风格、证据等维度，奖励模型再按这些标准评估回答。
+          </p>
+          <p>
+            评分细则可以是整体式的、逐标准式的、检查清单式的或分层的。整体式细则基于多条标准给出总体判断；
+            逐标准式细则给每个维度分别打分；检查清单式细则把评估分解为原子条件；分层式细则则把标准组织在多个层级上。
+          </p>
+          <figure class="paper-figure">
+            <img src="assets/figures/fig-rubric-rm.png" alt="面向奖励建模的自动评分细则生成示意">
+            <figcaption>评分细则可以由外部生成，也可以由奖励模型自我生成。</figcaption>
+          </figure>
+          <p>
+            生成评分细则可以人工或自动完成。自动生成很有吸引力，因为它能把评估标准适配到每个输入。论文还讨论了
+            评分细则优化：通过偏好数据或强化学习来打磨细则，使其更好地区分高质量回答
+            <a class="citation" href="#ref-7">[7]</a>。
+          </p>
+
+          <h3 id="rm-evaluation">4.1.6 奖励模型评估</h3>
+          <p>
+            评估奖励模型很难，因为奖励模型不是最终应用，它被用来训练或挑选策略。一个奖励模型可能在静态偏好预测上表现很好，
+            却在策略于优化过程中学会利用它时失效。
+          </p>
+          <p>
+            论文总结了三种评估范式。基于强化学习的评估：用每个奖励模型训练一个策略，再让得到的策略在下游基准上一较高下。
+            成对排序评估：检查奖励模型是否给被偏好的回答打更高分。列表式排序评估：让奖励模型从多个候选中挑出最佳回答
+            <a class="citation" href="#ref-8">[8]</a>。
+          </p>
+          <figure class="paper-figure">
+            <img src="assets/figures/fig-rm-evaluation.png" alt="基于强化学习、成对排序与列表式排序三种奖励模型评估的对比">
+            <figcaption>奖励模型评估可以测量下游强化学习表现、成对排序能力或列表式选择能力。</figcaption>
+          </figure>
+          <p>
+            这些评估回答的是不同问题。成对与列表式排序更容易规模化扩展；基于强化学习的评估更昂贵，
+            但它是在奖励模型真正会被使用的环境中检验它。实践中，静态评估与下游评估都有价值。
+          </p>
+
+          <h3 id="better-advantage">4.2 更好的优势估计</h3>
+          <p>
+            改进奖励构造之后，下一个问题是如何把奖励转化为策略更新。优势估计要在策略优化的偏差与方差之间做权衡：
+            蒙特卡洛估计使用观察到的回报，偏差可以较低，但方差往往很高；时序差分方法通过从价值估计自举来降低方差，
+            但可能引入偏差。
+          </p>
+
+          <h3 id="td-advantage">4.2.1 基于时序差分（TD）的优势估计</h3>
+          <p>
+            第 3 节里基本的蒙特卡洛优势用的是“观察到的未来回报减去价值基线”。这一直观，但很长的 LLM 输出会让观察到的回报
+            很嘈杂。时序差分估计用一步目标取代完整未来回报：立即奖励加上下一状态的价值。由于它从价值模型自举、
+            而不必等待整条轨迹结束，估计的噪声更小。
+          </p>
+          <div class="equation">
+            \[
+              \delta_t=r_t+\gamma V_{t+1}-V_t
+            \]
+          </div>
+          <p class="notation-note">
+            这里 \(\delta_t\) 是时序差分残差，衡量实际观察到的转移比价值模型的预期更好还是更差。
+          </p>
+          <p>
+            代价是偏差：若价值模型不准，自举出来的目标就可能是错的。这就是为什么优势估计通常被表述为一个偏差-方差问题，
+            而不是一条“最佳公式”。
+          </p>
+
+          <h3 id="gae-section">4.2.2 广义优势估计（GAE）</h3>
+          <p>
+            广义优势估计用一个可调的权衡把这些思想结合起来。在 LLM 训练中，长序列与延迟奖励让问题更复杂：
+            独立的评论器可以估计词元级价值，但为语言训练一个可靠的评论器既昂贵又不稳定
+            <a class="citation" href="#ref-9">[9]</a>。
+          </p>
+          <div class="equation">
+            \[
+              A_t^{\mathrm{GAE}}
+              =
+              \delta_t+\gamma\lambda A_{t+1}^{\mathrm{GAE}}
+            \]
+          </div>
+          <p class="notation-note">
+            \(\lambda\) 控制把多少未来的时序差分信息混入当前优势。取值小更依赖短时域自举，取值大则更接近蒙特卡洛回报。
+          </p>
+
+          <h3 id="grpo-section">4.2.3 组相对策略优化（GRPO）</h3>
+          <p>
+            GRPO 针对独立评论器的成本与不稳定问题：它从同一提示采样的一组回答中估计优势，不依赖学习到的价值模型，
+            而是在组内对奖励做归一化。只要某个回答比同一输入的其他采样回答更好，就被认为是好的
+            <a class="citation" href="#ref-10">[10]</a>。
+          </p>
+          <figure class="paper-figure">
+            <img src="assets/figures/fig-grpo.gif" alt="组相对策略优化示意">
+            <figcaption>GRPO 从一组采样回答中估计相对优势。</figcaption>
+          </figure>
+          <div class="equation">
+            \[
+              \mathcal{L}_{g}(\theta)
+              =
+              -
+              \mathbb{E}_{\mathbf{x}\sim\mathcal{S}_{x}}
+              \frac{1}{G}
+              \sum_{i=1}^{G}
+              \left[
+                \sum_{t=1}^{T}
+                \mathrm{Clip}\left(
+                  \frac{\mathrm{Pr}_{\theta}(y_{i,t}\mid\mathbf{x},\mathbf{y}_{i,&lt;t})}
+                       {\mathrm{Pr}_{\theta_{\mathrm{ref}}}(y_{i,t}\mid\mathbf{x},\mathbf{y}_{i,&lt;t})}
+                  A_{i,t}^{\mathrm{GRPO}}
+                \right)
+                -
+                \beta \mathrm{Penalty}
+              \right]
+            \]
+          </div>
+          <p class="notation-note">
+            这里 \(G\) 是组内采样输出的数量，\(A_{i,t}^{\mathrm{GRPO}}\) 是第 \(i\) 个输出使用的组相对优势。
+          </p>
+          <p>
+            这种方法很适合推理任务：可以为同一道题生成多个候选解答并由验证器打分，组本身就是天然的基线。
+            去掉评论器还能简化训练、降低计算成本。
+          </p>
+          <table class="concept-table compact">
+            <thead>
+              <tr>
+                <th>估计器</th>
+                <th>依赖什么</th>
+                <th>权衡</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>蒙特卡洛</td><td>观察到的完整回报。</td><td>低偏差、高方差。</td></tr>
+              <tr><td>时序差分</td><td>立即奖励加下一状态价值。</td><td>低方差、可能引入偏差。</td></tr>
+              <tr><td>GAE</td><td>带 gamma 与 lambda 的递归 TD 误差。</td><td>偏差-方差平衡可调。</td></tr>
+              <tr><td>GRPO</td><td>同一采样组内的相对奖励。</td><td>免去单独的价值模型。</td></tr>
+            </tbody>
+          </table>
+
+          <h3 id="efficient-rl">4.3 高效强化学习方法</h3>
+          <p>
+            即使有了更好的奖励与优势，强化学习后训练仍然昂贵。成本不只在优化器一步：训练循环要反复生成 rollout、打分、
+            估计优势、更新策略，还常常要在内存里同时保留多个模型。对 LLM 来说，这既是时间效率问题也是空间效率问题——
+            我们希望以更短的墙上时间、更少的采样词元、更少的奖励模型调用和更低的内存压力，达到期望的强化学习效果。
+          </p>
+          <p>
+            本节聚焦两类主要的浪费。第一类是采样：RL 数据集中的每个提示都可能要求自回归生成，大规模强化学习还会在许多训练步里
+            重复这个过程。第二类是奖励计算：一个可靠的奖励模型本身可能就是一个大 LLM，给每条 rollout 打分代价不菲。
+            因此高效强化学习方法问的是一个简单问题：循环里哪些部分对学习真正必要，哪些可以跳过、近似，或换成更便宜的信号？
+          </p>
+          <table class="concept-table compact">
+            <thead>
+              <tr>
+                <th>成本来源</th>
+                <th>为什么贵</th>
+                <th>效率策略</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>Rollout 采样</td><td>必须先由策略自回归生成词元，才能拿到奖励。</td><td>用推理加速，或只采样真正需要探索的提示。</td></tr>
+              <tr><td>奖励打分</td><td>大型奖励模型给每个采样输出都增加额外前向计算。</td><td>改用规则、验证器、更小的奖励模型、蒸馏、剪枝或专家混合设计。</td></tr>
+              <tr><td>辅助模型</td><td>PPO 风格训练要同时驻留策略、参考、奖励与价值模型。</td><td>可能时删去或简化组件，如免价值模型的优势方法或直接偏好方法。</td></tr>
+              <tr><td>无信息量的提示</td><td>有些提示早已被解决，有些在当前阶段又太难。</td><td>优先处理“奖励显示仍有提升空间”的提示。</td></tr>
+            </tbody>
+          </table>
+
+          <h3 id="dynamic-sampling">4.3.1 动态采样</h3>
+          <p>
+            采样是 LLM 强化学习的主要成本之一，因为必须先由策略自回归生成、再打分。动态采样质疑的是：
+            是否每个提示都值得同样多的探索。若当前策略对某提示已经给出高奖励回答，继续采样可能是浪费；
+            若某提示太难、始终获得很低的奖励，反复探索同样低效。
+          </p>
+          <p>
+            从推理侧看，许多标准 LLM 加速技术能缩短 rollout 时间，如 KV 缓存、量化、批处理和投机解码。
+            动态采样与之不同：它从强化学习训练一侧决定“哪些提示本来就不值得探索”，从而减少采样。
+            动机在于：SFT 或预训练后的策略不是随机初始化的智能体——对某些提示它已经能给出强答案，
+            对另一些提示它当前太弱、不增加更多能力根本发现不了有用轨迹。对这两种情况一视同仁就是浪费采样预算。
+          </p>
+          <p>
+            一种简单策略是：先为每个提示 \(\mathbf{x}_k\) 生成贪心回答 \(\hat{\mathbf{y}}_k\)，再用奖励模型给该回答打分：
+          </p>
+          <div class="equation">
+            \[
+              R_k
+              =
+              R_{\phi}(\mathbf{x}_k,\hat{\mathbf{y}}_k),
+              \qquad
+              r_{\mathrm{upper}}
+              =
+              \frac{1}{N}\sum_{i=1}^{N}R_{\phi}(\mathbf{x}_i,\hat{\mathbf{y}}_i)
+            \]
+          </div>
+          <p class="notation-note">
+            这里 \(R_k\) 是赋给当前贪心输出的奖励，\(N\) 是纯输入数据集 \(\mathcal{S}_x\) 中的提示数，
+            \(r_{\mathrm{upper}}\) 是一种可行的上阈值。
+          </p>
+          <p>
+            高于上阈值的提示可以跳过或少采样，因为当前策略已经做得足够好。还可以引入下阈值 \(r_{\mathrm{lower}}\)：
+            低于它的提示可能被降级，因为策略在当前阶段不太可能找到有用输出。最有价值的提示常常位于两个阈值之间：
+          </p>
+          <div class="equation">
+            \[
+              r_{\mathrm{lower}}
+              \leq
+              R_{\phi}(\mathbf{x}_k,\hat{\mathbf{y}}_k)
+              \leq
+              r_{\mathrm{upper}}
+            \]
+          </div>
+          <p>
+            这段“中间地带”正是探索最可能有回报的区域：模型不算完美，但也不是一筹莫展。对这些提示采样多条 rollout
+            能暴露出有意义的奖励差异，从而让 PPO、GRPO 或其他强化学习优化器在每生成一个词元时获得更强的学习信号。
+          </p>
+          <aside class="callout">
+            <strong>探索预算。</strong>
+            动态采样并不让生成变成免费，它改变的是生成预算花在哪里：对“预期学习价值低”的提示少采样，
+            对“采样输出能拉开奖励差距”的提示多采样。
+          </aside>
+          <p>
+            代价是阈值成了训练设计的一部分。\(r_{\mathrm{upper}}\) 设得太低，可能停止训练仍有提升空间的提示；
+            \(r_{\mathrm{lower}}\) 设得太高，可能过早丢弃困难样本、降低鲁棒性。实践中，动态采样常与周期性重打分结合，
+            让提示随策略进步而重新进入或退出活跃集合。
+          </p>
+
+          <h3 id="lightweight-rewards">4.3.2 轻量级奖励方法</h3>
+          <p>
+            第二大成本是奖励计算。在标准 RLHF 循环里，每个采样输出都必须交给奖励模型。如果奖励模型很大，
+            这就在策略生成之上又叠加了可观的推理开销。轻量级奖励方法试图通过替换、补充或压缩奖励模型来降低该成本。
+          </p>
+          <p>
+            基于规则的奖励是最明确的例子：数学任务奖励正确的最终答案；代码任务奖励通过测试；格式任务奖励字段齐全的合法 JSON。
+            这类奖励快速、确定，且不易受奖励模型失准影响。在数学、编程、格式与工具调用等“正确性有时可自动检查”的任务里，
+            它们格外有用。
+          </p>
+          <table class="concept-table compact">
+            <thead>
+              <tr>
+                <th>奖励类型</th>
+                <th>示例</th>
+                <th>优点</th>
+                <th>局限</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>格式规则</td><td>对包含 <code>tip1</code>、<code>tip2</code>、<code>tip3</code> 等必需键的合法 JSON 给予奖励。</td><td>便宜且精确。</td><td>只检查形式，未必保证内容。</td></tr>
+              <tr><td>答案规则</td><td>数学回答的最终答案与已验证解一致时给奖励。</td><td>答案可检查时很可靠。</td><td>可能稀疏，且忽略推理质量。</td></tr>
+              <tr><td>执行验证器</td><td>对通过单元测试的代码，或达到正确环境状态的工具调用给予奖励。</td><td>度量真实任务成败。</td><td>需要可信的执行环境。</td></tr>
+              <tr><td>小型奖励模型</td><td>蒸馏或剪枝更大的奖励模型以加快打分。</td><td>保留学习式偏好判断的部分灵活性。</td><td>可能继承错误、损失细节。</td></tr>
+            </tbody>
+          </table>
+          <p>
+            规则的主要好处是稳定。由于奖励是预先定义的，策略不太能以同样的方式利用学习式奖励模型的隐藏怪癖。
+            但基于规则的奖励只在“目标行为能被可靠检查刻画”时有效：JSON 合法性奖励能保证结构，却不能保证建议真的有用；
+            最终答案奖励能验证正确性，却说不清哪一步推理出了问题。正因如此，把轻量奖励与过程奖励、验证器或
+            偶尔的学习式奖励模型检查结合，往往是最强的做法。
+          </p>
+          <p>
+            在更宽泛的偏好对齐场景，学习式奖励模型仍然有用，因为期望行为往往细腻到简单规则无法覆盖。
+            这时效率可以来自“让奖励模型更便宜”而不是删掉它：蒸馏可以用小模型模仿大模型；剪枝与量化能降低推理开销；
+            专家混合奖励模型每个样本只激活部分参数。这些做法比手写规则保留更多灵活性，但仍必须评估——
+            更便宜的奖励模型可能校准更差、更不鲁棒。
+          </p>
+          <aside class="recap-card">
+            <h3>效率小结</h3>
+            <p>
+              高效强化学习的要义，是把训练预算花在能产生学习信号的地方：动态采样减少不必要的 rollout，
+              轻量奖励减少不必要的奖励模型计算，免价值模型或直接偏好方法则简化训练循环中昂贵的部分。
+            </p>
+          </aside>
+
+          <h3 id="dpo-section">4.4 直接偏好优化（DPO）</h3>
+          <p>
+            本节以一个更根本地改变工作流的方法收尾。DPO 给出了偏好学习的另一条路线：不先训练奖励模型再做强化学习，
+            而是直接从偏好对优化策略。这使训练更接近监督学习，其基本形式不再需要显式的在线强化学习循环
+            <a class="citation" href="#ref-11">[11]</a>。
+          </p>
+          <figure class="paper-figure">
+            <img src="assets/figures/fig-dpo.png" alt="PPO 与 DPO 训练工作流对比">
+            <figcaption>PPO 用偏好数据训练奖励模型；DPO 直接从偏好数据训练策略。</figcaption>
+          </figure>
+          <p>
+            DPO 简化了流水线，实现往往更直接。但它通常基于固定的偏好数据，而强化学习方法可以持续从当前策略采样、
+            从新生成的行为中学习。因此，PPO 风格的强化学习与 DPO 风格的偏好优化，代表的是“探索能力、实现简单性、
+            系统成本”之间的不同取舍。
+          </p>
+        </section>
+
+        <section class="chapter" id="reasoning">
+          <p class="chapter-number">第 5 节</p>
+          <h2>面向 LLM 推理的强化学习</h2>
+          <p>
+            讲完一般性的强化学习训练及其改进后，教程转向推理。这是第一个主要的应用章节，因为在推理任务上，反馈的价值最直观：
+            数学答案可以被检查，代码可以跑测试，带工具调用的推理可以用外部结果来评估。这些信号往往稀疏，
+            但比开放式偏好判断更客观 <a class="citation" href="#ref-12">[12]</a>。
+          </p>
+          <p>
+            本节从测试时讲起，因为在任何参数更新之前，搜索与验证就已经能改进答案。这让读者先掌握基本模式：
+            生成多条推理路径、评估它们、选出或改进最好的那些。本节随后通过迭代式强化学习、大规模强化学习与同策略蒸馏，
+            把这一推理时的模式变成训练，让更强的推理成为模型自身的一部分，而不只是包在模型外面的一道流程。
+          </p>
+          <aside class="lesson-card">
+            <h3>推理强化学习模式</h3>
+            <ul>
+              <li>生成多个候选解答或推理路径。</li>
+              <li>用验证器、奖励模型或过程奖励来评估它们。</li>
+              <li>训练策略，使强推理行为在无需测试时搜索时也更可能出现。</li>
+            </ul>
+          </aside>
+
+          <h3 id="test-time-scaling">5.1 测试时扩展</h3>
+          <p>
+            测试时扩展通过生成多条候选推理路径并挑选其中强者来提升表现。Best-of-N 采样是代表性例子：模型采样若干回答，
+            由奖励模型或验证器打分，返回分数最高的回答。
+          </p>
+          <p>
+            本节从推理而非训练开始，因为推理质量常常只需在测试时投入更多计算就能提升。像 "Let's think step by step"
+            （让我们一步步思考）这样的提示能鼓励更长的推理，但它并不告诉模型哪条推理路径真的更好。
+            测试时扩展补上了选择信号：生成备选、评估它们、保留最有希望的那个。
+          </p>
+          <figure class="paper-figure">
+            <img src="assets/figures/fig-bon.gif" alt="Best-of-N 采样示意">
+            <figcaption>Best-of-N 采样在多个生成的候选中选出最优者，从而改进推理。</figcaption>
+          </figure>
+          <p>
+            在 Best-of-N 采样中，候选可以由奖励模型重排。若没有奖励模型，当答案容易比较时（例如带最终数值结果的数学题），
+            可以用多数投票。同一思想也能通过拒绝采样用于训练：采样多个回答，保留最好的那些，再用这些被选中的输出微调模型。
+          </p>
+          <p>
+            这就搭起了通向强化学习的桥。如果验证器能在推理时可靠地识别更好的候选，那么同一信号也可以在训练期间使用，
+            让模型学会更频繁地直接生成强推理路径，而不必依赖测试时的大量采样。
+          </p>
+
+          <h3 id="step-verification">5.1.2 逐步验证</h3>
+          <p>
+            对长推理链而言，最终答案的奖励可能太稀疏。逐步验证通过评估中间推理步骤提供更稠密的反馈，
+            有助于定位解答路径从何处开始出错，支持更精确的信用分配 <a class="citation" href="#ref-13">[13]</a>。
+          </p>
+          <p>
+            过程奖励模型可以给部分解答打分，贪心或束式流程则可以沿最有希望的路径继续展开。
+            这把推理从“一次成型的生成”转向“有引导地构造解答”。
+          </p>
+          <p>
+            关键变化在反馈的粒度：验证器不再只给最终答案打分，而是给每个中间步骤或前缀打分。
+            一条路径若部分推理已不乐观，就可以被提前放弃。同一过程奖励之后还能在强化学习中充当塑形奖励，
+            比单个结果分数给模型更有信息量的反馈。
+          </p>
+          <figure class="paper-figure">
+            <img src="assets/figures/fig-step-verification.gif" alt="带贪心搜索的逐步验证示意">
+            <figcaption>步骤级验证在最终答案产生之前就给出反馈。</figcaption>
+          </figure>
+
+          <h3 id="mcts-section">5.1.3 蒙特卡洛树搜索（MCTS）</h3>
+          <p>
+            蒙特卡洛树搜索把推理更正式地形式化为搜索：节点表示部分推理状态，边表示候选的下一步。
+            搜索过程选择有前景的节点、扩展它们、模拟后续、并把评估结果回传
+            <a class="citation" href="#ref-14">[14]</a>。
+          </p>
+          <figure class="paper-figure">
+            <img src="assets/figures/fig-mcts.gif" alt="面向推理的蒙特卡洛树搜索示意">
+            <figcaption>MCTS 通过选择、扩展、模拟、回传来探索推理路径。</figcaption>
+          </figure>
+          <p>
+            当模型具备足够的局部推理能力提出候选步骤、但需要搜索才能找到可靠全局解时，MCTS 很有用。
+            验证器或奖励模型会把搜索引向期望成功率更高的路径。
+          </p>
+          <p>
+            在本教程的表述中，MCTS 还澄清了“推理为什么类似序贯决策”：每个推理步骤都改变状态，后续步骤依赖早期选择，
+            来自模拟终局答案的延迟奖励可以传播回更早的部分状态。
+          </p>
+          <table class="concept-table compact">
+            <thead>
+              <tr>
+                <th>测试时方法</th>
+                <th>被评分的对象</th>
+                <th>反馈粒度</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>Best-of-N</td><td>完整的采样输出。</td><td>结果级。</td></tr>
+              <tr><td>逐步验证</td><td>中间推理步骤。</td><td>过程级。</td></tr>
+              <tr><td>MCTS</td><td>部分推理状态及其后续。</td><td>搜索式混合反馈。</td></tr>
+            </tbody>
+          </table>
+
+          <h3 id="iterative-rl">5.2 迭代式强化学习</h3>
+          <p>
+            一旦验证器能识别更好的推理路径，下一个问题就是如何把该信号变成训练配方。迭代式强化学习通过 DeepSeek-R1 的流程来讲解：
+            它没有采用简单的“先 SFT 后 RL”两阶段流水线，而是拆成多个目标不同的阶段，使模型在提升推理能力的同时保持可读、有用的行为。
+          </p>
+          <figure class="paper-figure">
+            <img src="assets/figures/fig-iterative-rl.png" alt="迭代式强化学习流程示意">
+            <figcaption>DeepSeek-R1 依次使用冷启动 SFT、大规模强化学习、拒绝采样加 SFT，以及最终的多任务强化学习阶段。</figcaption>
+          </figure>
+          <p>
+            第一阶段用高质量推理数据做冷启动；下一阶段用基于规则的奖励（格式检查、答案验证等）施加大规模强化学习以强化推理。
+            由于这可能损害可读性，随后用拒绝采样和 SFT 在多个任务上打磨输出；最终的多任务强化学习阶段再用覆盖面更广的
+            奖励模型提升泛化。
+          </p>
+          <p>
+            顺序很关键。面向推理的强化学习放在前面，是因为后面的拒绝采样需要一个已经能探索有意义推理轨迹的模型；
+            若缺少这种能力，采出的候选质量差，后续 SFT 阶段就无材可选。推理能力被强化之后，
+            拒绝采样才能有效改善可读性，多任务强化学习才能恢复更广的指令遵循行为。
+          </p>
+
+          <h3 id="large-scale-rl">5.3 大规模强化学习</h3>
+          <p>
+            大规模推理强化学习把迭代循环扩展到大量提示、大量采样解答、强验证器与大规模训练基础设施。
+            规模能改善探索、让稀疏奖励更有用，因为模型有更多机会发现正确轨迹。但它同时增加了对可靠奖励、
+            稳定优化和细致监控的需求。
+          </p>
+          <p>
+            核心问题不只是模型能否找到正确解答，而是强化学习能否把“寻找的过程”变成模型习得行为的一部分。
+            这正是推理强化学习成为现代 LLM 研究主要方向的原因。
+          </p>
+          <p>
+            本节还强调两个现实挑战。其一，大规模强化学习需要高度可靠的奖励，因为策略会主动寻找使奖励最大化的行为；
+            数学与代码场景中基于规则的奖励很有吸引力，因为答案验证相对稳定。其二，用来约束策略漂移的参考模型，
+            会随着策略进步而显得过于束缚，因此一些方法会定期刷新参考模型，或以其他办法在稳定性与自适应之间取得平衡。
+          </p>
+
+          <h3 id="opd-section">5.4 同策略蒸馏</h3>
+          <p>
+            之所以纳入同策略蒸馏（on-policy distillation），是因为它处在“监督蒸馏”与“强化学习式反馈”之间一个有用的中间地带。
+            它让训练状态保持同策略：学生先用当前策略生成轨迹，教师再在学生实际访问的状态上给出下一词元的分布级监督。
+          </p>
+          <figure class="paper-figure">
+            <img src="assets/figures/fig-opd.gif" alt="同策略蒸馏示意">
+            <figcaption>OPD 用学生在其访问状态处的教师分布，构造稠密的词元级监督。</figcaption>
+          </figure>
+          <p>
+            这缓解了“用教师生成轨迹做离线蒸馏”带来的分布不匹配。在论文的强化学习表述中，教师与学生分布之间的负 KL 散度
+            可以当作词元级奖励，给出比“只有结果”的监督更稠密的反馈。
+          </p>
+          <p>
+            与普通蒸馏的区别很重要。离线蒸馏在学生并未访问的、教师生成的轨迹上训练学生；OPD 则让学生先生成，
+            再让教师从学生访问过的前缀处继续示范。这让监督更稠密、更贴近学生真实犯的错误，
+            代价是训练期间要额外运行教师前向。
+          </p>
+        </section>
+
+        <section class="chapter" id="agents">
+          <p class="chapter-number">第 6 节</p>
+          <h2>智能体强化学习</h2>
+          <p>
+            第 6 节把同一套强化学习视角从“单个回答”扩展到交互式智能体。在前面的章节里，轨迹常是一次补全或一条推理轨迹；
+            对智能体而言，轨迹还包括观测、计划、工具调用、返回结果、记忆操作与最终任务结果。序列因此更长，奖励结构也更复杂。
+          </p>
+          <p>
+            本节按“能力 → 基础设施 → 学习信号”的顺序展开。先问智能体必须会做什么，聚焦规划与工具调用；
+            再问怎样的环境能暴露这些决策并提供反馈；随后处理信用分配，因为延迟的任务成败必须连回早期的计划与动作；
+            最后说明智能体如何通过记忆、技能与轨迹精炼来复用经验。
+          </p>
+          <table class="concept-table">
+            <thead>
+              <tr>
+                <th>智能体组件</th>
+                <th>论文强调什么</th>
+                <th>训练信号</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>规划</td><td>把任务分解为子目标与可执行步骤。</td><td>轨迹成败与计划质量。</td></tr>
+              <tr><td>工具调用</td><td>选择工具、组织参数、解读观测、适时停止。</td><td>执行正确性、工具使用的恰当性与成本。</td></tr>
+              <tr><td>环境</td><td>提供状态、动作、观测、转移与验证器。</td><td>可靠的状态式或任务成败式奖励。</td></tr>
+              <tr><td>记忆与技能</td><td>把经验转化为可复用的信息与行为。</td><td>检索或使用技能后后续任务的成败。</td></tr>
+            </tbody>
+          </table>
+
+          <h3 id="agent-capabilities">6.1 构建智能体能力</h3>
+          <p>
+            论文聚焦两项基础智能体能力，因为它们造成了后面绝大多数的学习问题。规划把任务分解为子目标与动作步骤；
+            工具调用让模型能与外部系统交互，如搜索引擎、API、代码解释器、数据库与软件环境。这些决策一旦出现，
+            仅有模仿数据通常就不够了——智能体还需要关于“它的计划和工具调用到底有没有奏效”的反馈。
+          </p>
+
+          <h4>规划</h4>
+          <p>
+            规划是“即使用户没有明说步骤，也能推断出完成任务所需步骤”的能力。教程的示例中，智能体面对一个带计算器和
+            数据库 API 的环境，收到一个看娃报酬任务，必须计划：抽取数字、计算 \(12\times 50/60\)、组织结果格式、通过 API 保存。
+          </p>
+          <p>
+            监督式规划数据可以提供最初的脚手架：数据可以包含环境信息、采样轨迹、轨迹评估与筛选出的示范。
+            强化学习随后通过交互改进策略，模型从真实任务执行中获得反馈。
+          </p>
+          <figure class="paper-figure">
+            <img src="assets/figures/fig-agent-planning.png" alt="面向智能体规划的 SFT 数据构造示意">
+            <figcaption>规划数据可以由环境、采样轨迹与轨迹评估构造而来。</figcaption>
+          </figure>
+          <p>
+            它与普通 SFT 的重要区别在于：计划要由其下游后果来评判。一个局部合理的子目标，可能在几次工具调用之后仍然导致失败；
+            一条最初失败的轨迹，反而可能揭示有用的替代路径。强化学习在这里有用，是因为它能按执行结果来优化计划，
+            而不只是模仿静态示范。
+          </p>
+
+          <h4>工具调用</h4>
+          <p>
+            工具调用带来新的决策：是否调用工具、调用哪个、参数如何组织、如何解读返回的观测、何时停止。
+            这些决策可以用基于任务成败、执行正确性或中间进展的奖励来优化
+            <a class="citation" href="#ref-15">[15]</a><a class="citation" href="#ref-16">[16]</a><a class="citation" href="#ref-17">[17]</a>。
+          </p>
+          <p>
+            论文把工具学习分为三个层次。基于提示的工具调用：给模型工具说明与示范，让它在上下文学到交互模式。
+            监督式工具数据：在“思考、动作、观测、最终答案”构成的轨迹上微调模型。强化学习则优化模仿无法直接评判的选择：
+            这次工具调用是否必要、参数是否有效、观测是否被正确使用、使用工具的成本是否值得。
+          </p>
+          <table class="concept-table compact">
+            <thead>
+              <tr>
+                <th>工具使用阶段</th>
+                <th>教什么</th>
+                <th>主要局限</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>基于提示的工具调用</td><td>如何在推理、动作、观测与答案之间交替。</td><td>高度依赖上下文内能力。</td></tr>
+              <tr><td>监督式工具数据</td><td>如何模仿示范的工具轨迹。</td><td>无法直接优化任务成败或工具成本。</td></tr>
+              <tr><td>面向工具使用的强化学习</td><td>如何依据反馈选择并执行工具。</td><td>需要可靠的环境与奖励。</td></tr>
+            </tbody>
+          </table>
+
+          <h3 id="environment-design">6.2 环境设计与扩展</h3>
+          <p>
+            有了规划与工具调用，下一个依赖项就是环境。环境决定智能体能学到什么，因为它规定了状态、可用动作、转移规则、
+            观测与成功标准。一个有用的环境应当既有足够挑战以教会真能力，又有足够结构以提供可靠反馈。
+          </p>
+          <p>
+            在智能体强化学习中，环境不只是背景板。它决定动作空间、在每个动作后暴露观测、提供学习所用的奖励或验证器。
+            对工具使用任务，这可能包括工具模式（schema）、可执行 API、状态变化、错误信息与任务成功检查。
+            设计不当的环境会让智能体学到脆弱的捷径，或收到误导性的反馈。
+          </p>
+          <p>
+            人工构造环境很昂贵。因此近期工作探索合成与程序化的环境生成。典型流水线是：定义环境规格、构建可执行组件、
+            生成场景、让智能体交互、验证结果，并用得到的轨迹进行学习 <a class="citation" href="#ref-18">[18]</a>。
+          </p>
+          <figure class="paper-figure">
+            <img src="assets/figures/fig-env-design.png" alt="智能体强化学习的环境合成与交互示意">
+            <figcaption>环境合成构造出“场景生成—交互—验证—智能体学习”的循环。</figcaption>
+          </figure>
+          <p>
+            这种“交互中学习”的循环让智能体训练不同于普通的数据集训练：智能体可以持续遇到新任务、暴露当前策略的弱点，
+            并收集支持进一步改进的轨迹。
+          </p>
+
+          <h3 id="credit-assignment">6.3 信用分配</h3>
+          <p>
+            环境返回最终结果后，优化器仍需知道从中该学什么。智能体轨迹在观察到最终奖励之前往往包含许多决策：
+            任务失败可能源于早期的规划错误、不正确的工具参数、误读的观测，或最终答案写错。
+            信用分配决定的就是轨迹的哪些部分该获得正向或负向的学习信号。
+          </p>
+          <figure class="paper-figure">
+            <img src="assets/figures/fig-credit-assignment.png" alt="智能体强化学习中的信用分配示意">
+            <figcaption>信用分配把轨迹级反馈分解为计划级与步骤级奖励。</figcaption>
+          </figure>
+          <p>
+            轨迹级奖励常常太粗糙。更有信息量的做法会加入中间奖励、过程监督、步骤验证器，或评估子目标的模型。
+            目标是把延迟的成功或失败与真正导致它的决策连接起来 <a class="citation" href="#ref-19">[19]</a>。
+          </p>
+          <p>
+            论文把不同层面的信用分开处理。计划级反馈评估最初分解是否有用；步骤级反馈评估单个动作，如工具调用或观测解读；
+            结果级反馈评估最终任务成败。组合这些信号，能帮智能体不只知道“这条轨迹失败了”，还知道“该改哪个决策”。
+          </p>
+
+          <h3 id="agent-experience">6.4 从智能体经验中学习</h3>
+          <p>
+            最后一步，是不再把智能体数据当作一次性消耗品。智能体系统不仅应从人类示范中学习，还应从自身的交互经验中学习。
+            随着智能体在动态环境中运行，它们会积累成功与失败的轨迹；这些轨迹能揭示可复用的知识、反复出现的解答模式，
+            以及静态监督数据难以覆盖的失败模式。
+          </p>
+          <p>
+            论文把这一转变描述为迈向智能体自我进化：通过积累、组织、复用经验来改进未来行为。三个机制是这一讨论的核心：
+            记忆管理存储有用信息；技能优化把重复行为抽象为可复用的工作流；轨迹精炼依据反馈修订智能体行为。
+          </p>
+          <table class="concept-table compact">
+            <thead>
+              <tr>
+                <th>机制</th>
+                <th>从经验中保留什么</th>
+                <th>如何改进智能体</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>记忆管理</td><td>用户偏好、任务事实、成功或失败的轨迹。</td><td>检索相关的既往经验，并学习该添加、更新、删除还是忽略哪些记忆。</td></tr>
+              <tr><td>技能优化</td><td>跨多条轨迹的可复用模式。</td><td>把低层经验提炼为指导规划与工具调用的高层工作流。</td></tr>
+              <tr><td>轨迹精炼</td><td>来自当前尝试的反馈。</td><td>利用反思或评估器反馈修正后续尝试，有时表现为上下文内的策略改进。</td></tr>
+            </tbody>
+          </table>
+
+          <h3 id="memory-management">6.4.1 记忆管理</h3>
+          <p>
+            记忆系统从过去的交互中存储有用信息，并在未来任务中检索使用。记忆管理器必须决定添加、更新、删除还是忽略什么。
+            这是一个学习问题：存太多会引入噪声，存太少又无法从既往经验中迁移。
+          </p>
+          <figure class="paper-figure">
+            <img src="assets/figures/fig-agent-memory.png" alt="面向智能体交互的记忆系统示意">
+            <figcaption>记忆管理器挑选有用经验并更新记忆库。</figcaption>
+          </figure>
+          <div class="stage-list" aria-label="记忆管理阶段">
+            <div><span>阶段 1</span><strong>记忆检索</strong><p>从记忆库检索相关记忆，支撑当前交互。</p></div>
+            <div><span>阶段 2</span><strong>记忆抽取</strong><p>从完成的交互中提取有用信息，供以后使用。</p></div>
+            <div><span>阶段 3</span><strong>记忆更新</strong><p>通过添加、修订、删除或忽略来整合新信息。</p></div>
+          </div>
+          <p>
+            朴素的记忆系统可以只是检索相关内容、存下新抽取的事实。论文强调，随着经验累积这会变难：记忆库里可能出现
+            冗余、过时或相互矛盾的信息。更有选择性的系统会把记忆维护视为一个操作选择问题：
+          </p>
+          <div class="equation">
+            \[
+              a^m \in \{\texttt{ADD},\texttt{UPDATE},\texttt{DELETE},\texttt{NOOP}\}
+            \]
+          </div>
+          <p class="notation-note">
+            这些操作分别是新建一条记忆、修订已有记忆、删除过时或矛盾的记忆，或保持记忆库不变。
+          </p>
+          <p>
+            Memory-R1 等近期工作把记忆管理器本身变成由强化学习优化的策略
+            <a class="citation" href="#ref-25">[25]</a>。给定抽取出的记忆与旧记忆库，管理器同时选择操作与更新后的记忆内容：
+          </p>
+          <div class="equation">
+            \[
+              (o,m')
+              \sim
+              \pi_{\theta}(\cdot\mid x^{\mathrm{mem}},\mathcal{M}_{\mathrm{old}})
+            \]
+          </div>
+          <p class="notation-note">
+            这里 \(o\) 是选定的记忆操作，\(m'\) 是更新后的记忆内容。奖励可以由下游任务表现定义，
+            例如 \(R_{\mathrm{answer}}=\mathrm{EM}(y_{\mathrm{pred}},y_{\mathrm{gold}})\)。
+          </p>
+          <p>
+            这样就无需给每个记忆操作人工标注。更新后的记忆若帮助智能体正确回答未来任务，记忆管理器获得正反馈；
+            若损害下游回答，该操作被抑制。论文还指出一个更长时域的挑战：有些记忆当下未必有用，但可能帮助未来任务，
+            因此记忆构建本身就可以表述为一个序贯决策问题 <a class="citation" href="#ref-26">[26]</a>。
+          </p>
+
+          <h3 id="skill-optimization">6.4.2 技能优化</h3>
+          <p>
+            技能优化把重复出现的成功行为转化为可复用的技能。与存储“过去交互的具体信息”的记忆不同，技能是更高层的指令包：
+            它可以描述何时使用某个行为、遵循什么工作流、需要哪些工具、以及如何核验最终结果。
+          </p>
+          <aside class="callout">
+            <strong>技能的形式。</strong>
+            在论文示例中，一条推理技能包含名称、任务描述、显式工作流、工具选择、验证检查清单与输出风格。
+            重点不只是记住某条过去的轨迹，而是把它抽象成可复用的流程。
+          </aside>
+          <p>
+            执行时，可以给智能体提供可用技能的说明，让它选择与当前任务最相关的技能。论文把这一检索步骤写成：
+          </p>
+          <div class="equation">
+            \[
+              \mathcal{S}^{*}
+              =
+              \mathrm{TopK}_{s_i\in\mathcal{S}}\mathrm{Score}(x,s_i)
+            \]
+          </div>
+          <p class="notation-note">
+            \(\mathcal{S}\) 是技能库，\(\mathrm{Score}(x,s_i)\) 度量任务与技能的相关性，\(\mathcal{S}^{*}\) 是被选中的技能集合。
+          </p>
+          <p>
+            手写技能可行，但论文明确指出技能质量非常依赖人的设计选择：一条看似结构完善的技能，换另一个智能体来用可能就会失效。
+            SkillRL 的应对方式是：按“产出的技能能否真正提升智能体表现”来优化技能生成
+            <a class="citation" href="#ref-27">[27]</a>。
+          </p>
+          <figure class="paper-figure">
+            <img src="assets/figures/fig-skillrl.png" alt="SkillRL 示意">
+            <figcaption>技能优化把收集到的轨迹转化为可复用技能，供后续强化学习训练使用。</figcaption>
+          </figure>
+          <div class="step-flow compact-flow cycle-flow" aria-label="SkillRL 工作流">
+            <div><span>1</span><strong>收集</strong><p>从环境中收集成功与失败的轨迹。</p></div>
+            <div><span>2</span><strong>抽象</strong><p>提取可复用技能，初始化技能库。</p></div>
+            <div><span>3</span><strong>引导</strong><p>检索相关技能，引导强化学习的探索与规划。</p></div>
+            <div><span>4</span><strong>精炼</strong><p>用新轨迹发现新技能或改进旧技能。</p></div>
+          </div>
+          <p>
+            这形成一个递归循环：技能库为强化学习训练提供高层行为先验，改进后的智能体又生成更好的轨迹，进一步打磨技能库。
+            就此而言，技能优化是把低层交互经验压缩为可在任务间迁移的可复用能力。
+          </p>
+
+          <h3 id="trajectory-refinement">6.4.3 轨迹精炼</h3>
+          <p>
+            轨迹精炼利用某次解答尝试的反馈来修订智能体后续的行为。与“为未来任务存储或抽象经验”的记忆管理、
+            技能优化不同，精炼直接编辑当前或下一条轨迹。这对智能体特别自然，因为工具执行结果与环境状态在交互过程中就提供反馈。
+          </p>
+          <div class="revision-flow" aria-label="轨迹精炼工作流">
+            <div><strong>任务</strong><p>从问题或环境目标出发。</p></div>
+            <div><strong>初始轨迹</strong><p>生成第一次推理、规划或工具调用尝试。</p></div>
+            <div><strong>反馈</strong><p>接收验证器、评估器、工具或环境的信号。</p></div>
+            <div><strong>反思</strong><p>把反馈转化为错误分析或改进策略。</p></div>
+            <div><strong>精炼轨迹</strong><p>依据反思产出更好的后续尝试。</p></div>
+          </div>
+          <p>
+            Reflexion 是基于提示的代表性方法：智能体先生成初始轨迹、接收评估器反馈、写一段反思，再在后续尝试中使用该反思
+            <a class="citation" href="#ref-20">[20]</a>。论文把它与步骤级反馈联系起来：结果级反馈可能只说“最终答案错了”，
+            步骤级反馈却能指出轨迹错在哪一步、智能体应如何修正。
+          </p>
+          <p>
+            基于提示的精炼有用，但论文指出两个局限：其一，它依赖预训练模型理解反馈、修正行为的原生能力；
+            其二，它往往只帮到当前这次交互，没有把失败轨迹变成可迁移的经验。因此近期工作以更显式的方式训练智能体获得精炼能力——
+            通过精炼微调，或基于探索的轨迹优化 <a class="citation" href="#ref-28">[28]</a><a class="citation" href="#ref-29">[29]</a>。
+          </p>
+          <aside class="callout">
+            <strong>上下文内策略改进。</strong>
+            论文把轨迹精炼看作接近“上下文内强化学习”：智能体可能不更新模型参数，但它用反馈与反思更新自己的上下文，
+            从而改变同一次交互中后续的决策。
+          </aside>
+          <aside class="recap-card">
+            <h3>智能体小结</h3>
+            <p>
+              从智能体经验中学习不是单一机制：记忆保留有用的事实与经历，技能把重复轨迹压缩为工作流，精炼把反馈变成改进后的尝试。
+              三者合在一起，让智能体把经验用作超越静态数据集的东西。
+            </p>
+          </aside>
+        </section>
+
+        <section class="chapter" id="multimodal">
+          <p class="chapter-number">第 7 节</p>
+          <h2>多模态强化学习</h2>
+          <p>
+            第 7 节把强化学习从纯文本 LLM 扩展出去。这一章放在推理与智能体之后，是因为同一套抽象现在要经受模态变化的考验：
+            多模态模型跨文本、图像、视频与音频处理和生成信息。本章区分两种情况——多模态理解：模型通常仍以非文本输入为条件
+            生成文本；多模态生成：模型合成图像或其他媒体。
+          </p>
+          <p>
+            尽管架构不同，核心的强化学习模式是相似的：采样输出或生成轨迹、用奖励评估、把模型朝被偏好的行为更新。
+            变化的是被打分的对象和“轨迹”的含义。视觉理解的轨迹仍可以是文本回答；图像生成的轨迹则可能是一条去噪路径或离散化的流。
+          </p>
+          <table class="concept-table">
+            <thead>
+              <tr>
+                <th>场景</th>
+                <th>策略视角</th>
+                <th>奖励关注点</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>多模态理解</td><td>生成以视觉或多模态输入为依据（grounded）的回答。</td><td>遵循指令、视觉忠实度、事实性、有用性、避免幻觉。</td></tr>
+              <tr><td>扩散生成</td><td>把去噪过程视为多步轨迹。</td><td>图文对齐、人类偏好、安全性或美学质量。</td></tr>
+              <tr><td>流匹配生成</td><td>把连续生成路径离散为决策步骤。</td><td>奖励最终生成样本，并优化生成过程。</td></tr>
+            </tbody>
+          </table>
+
+          <h3 id="multimodal-understanding">7.1 多模态理解模型</h3>
+          <p>
+            多模态理解是与 LLM 强化学习更接近的情形。模型要回答基于非文本输入的问题或遵循相关指令，但输出常常仍是文本。
+            奖励可以评估遵循指令、视觉忠实度、事实正确性、有用性与幻觉避免。这就要求奖励模型同时理解语言与视觉内容
+            <a class="citation" href="#ref-21">[21]</a>。
+          </p>
+          <p>
+            从强化学习视角看，视觉语言模型与普通的 LLM 很像，因为输出通常还是文本：状态现在包含文本指令和编码器得到的
+            视觉表征，动作仍是下一个生成词元。只要奖励模型能判断文本是否“落到了图像的事实依据上”，
+            PPO 或 GRPO 风格的训练只需较小改动即可复用。
+          </p>
+          <figure class="paper-figure">
+            <img src="assets/figures/fig-visual-rm.gif" alt="视觉奖励模型训练示意">
+            <figcaption>视觉奖励模型可以通过“从文本偏好数据过渡到视觉偏好数据”的多阶段训练得到。</figcaption>
+          </figure>
+          <p>
+            论文把视觉奖励建模呈现为 RLHF 的自然延伸：偏好学习仍是核心，但被打分的输出必须同时对照指令与图像来评判。
+            这在数据收集、模型 grounding 与奖励泛化上带来了新挑战。
+          </p>
+          <p>
+            由于视觉偏好数据昂贵，论文描述了一种多阶段策略：第一，用大规模文本偏好数据预训练通用的偏好判断能力；
+            第二，用图文对偏好数据微调，缩小“通用文本偏好”与“视觉指令遵循”之间的任务差距；
+            第三，用较小的视觉偏好数据微调，让奖励模型学到基于图像评估真正需要的模态对齐能力。
+          </p>
+          <p>
+            这也解释了为什么多模态强化学习不只是算法问题：策略优化器可能是熟悉的，瓶颈却常常在能否构建一个
+            可靠判断视觉事实、模态特有错误与人类偏好的奖励模型。
+          </p>
+
+          <h3 id="multimodal-generation">7.2 多模态生成模型</h3>
+          <p>
+            多模态生成是更难的情形，因为输出不再是词元序列。这类模型合成图像、视频等非文本内容，常通过扩散或连续变换过程实现。
+            最大似然或重建式训练能学到高质量的数据分布，却未必直接优化用户的高层偏好，例如物体数量、颜色、布局、画面质量或提示满足度。
+          </p>
+          <p>
+            强化学习在这里有用，因为生成的样本可以被灵活的奖励信号评估：来自人类、学习式奖励模型、视觉语言评审或自动规则。
+            主要技术问题是：如何把生成过程重新解释为一条轨迹，使策略梯度式优化能把“最终样本的奖励”连回模型中间的生成决策。
+          </p>
+          <p>
+            这就是本节分别讨论扩散模型与流匹配模型的原因。它们都生成非文本内容，但轨迹不同：扩散天然给出一条去噪状态序列；
+            流匹配往往是确定性的连续过程，在线强化学习适用前需要额外的随机化表述。
+          </p>
+
+          <h3 id="diffusion-models">7.2.1 扩散模型</h3>
+          <p>
+            扩散模型通过逐渐的反想去噪过程生成样本：从随机噪声出发，模型反复预测更干净的潜变量，直到得到最终图像。
+            标准扩散训练主要教模型恢复数据分布，但并不保证最终样本满足细致的人类要求。
+          </p>
+          <p>
+            例如，模型可能生成一张很逼真的图像，却漏掉要求的数量、颜色或布局。强化学习在最终样本之上加一个评估器
+            （如偏好模型或视觉语言检查器），再把生成过程朝“获得更高奖励的样本”优化。
+          </p>
+          <div class="equation">
+            \[
+              \max_{\theta}
+              \mathbb{E}_{\mathbf{z}\sim p(\mathbf{z}),\,\mathbf{x}_0\sim p_{\theta}(\mathbf{x}_0\mid \mathbf{z})}
+              \left[
+                R_{\mathrm{dm}}(\mathbf{x}_0,\mathbf{z})
+              \right]
+            \]
+          </div>
+          <p class="notation-note">
+            这里 \(\mathbf{z}\) 表示文本提示，\(\mathbf{x}_0\) 是最终生成的图像，
+            \(R_{\mathrm{dm}}(\mathbf{x}_0,\mathbf{z})\) 是评估图像是否满足提示或偏好标准的奖励函数。
+          </p>
+          <p>
+            难点是扩散生成不是自回归的词元生成。按论文给出的表述，反向去噪过程可以被看作一个多步 MDP：
+            每一步以“当前带噪潜变量与提示”为状态，去噪后的下一个潜变量就是动作：
+          </p>
+          <div class="equation">
+            \[
+              s_t=(\mathbf{z},\mathbf{x}_{T-t}),\qquad
+              a_t=\mathbf{x}_{T-t-1},\qquad
+              \mathrm{Pr}_{\theta}(a_t\mid s_t)
+              =
+              U_{\theta}(\mathbf{x}_{T-t-1}\mid \mathbf{x}_{T-t},\mathbf{z})
+            \]
+          </div>
+          <p class="notation-note">
+            这里 \(U_{\theta}\) 表示学习到的反向去噪转移。去噪轨迹
+            \(\tau_{\mathrm{dm}}=\{\mathbf{x}_T,\mathbf{x}_{T-1},\ldots,\mathbf{x}_0\}\) 被当作强化学习优化的轨迹。
+          </p>
+          <div class="equation">
+            \[
+              \mathcal{L}_{\mathrm{dmrl}}(\theta)
+              =
+              -
+              \mathbb{E}_{\mathbf{z}\sim S_z,\,\tau_{\mathrm{dm}}\sim \mathrm{Pr}_{\theta}(\cdot)}
+              \left[
+                \sum_{t=0}^{T-1}
+                \log U_{\theta}(\mathbf{x}_{T-t-1}\mid\mathbf{x}_{T-t},\mathbf{z})
+                R_{\mathrm{dm}}(\mathbf{x}_0,\mathbf{z})
+              \right]
+            \]
+          </div>
+          <p class="notation-note">
+            这沿用论文中 DPOK 风格的表述：把反向去噪过程当作轨迹，用最终图像的奖励去优化其各去噪步的对数概率
+            <a class="citation" href="#ref-22">[22]</a>。
+          </p>
+          <aside class="callout">
+            <strong>基础说明。</strong>
+            这里展示的扩散强化学习目标基于 DPOK 的去噪轨迹视角。后续的扩散强化学习变体会修改其中部件，
+            如 KL 正则化、参考模型采样或组相对更新。
+          </aside>
+          <p>
+            在这种视角下，最终图像上的奖励可以用于去噪轨迹上的策略梯度损失
+            <a class="citation" href="#ref-22">[22]</a>。LLM 对齐中的技术也能自然迁移：KL 正则化可以约束模型，
+            参考扩散模型可以支持重要性采样，组相对方法可以比较同一提示下的多个生成样本。
+          </p>
+
+          <h3 id="flow-matching">7.2.2 流匹配模型</h3>
+          <p>
+            流匹配模型通过学习“简单先验分布到目标数据分布之间的连续时间流”来生成内容。它不像扩散那样逐渐加噪、去噪，
+            而是学习一个速度场，让样本沿连续轨迹被输运。
+          </p>
+          <p>
+            这带来不同的强化学习问题。扩散具有可以当作策略动作的随机去噪转移；标准流匹配在初始噪声固定后往往沿确定性的
+            ODE 路径行进，这限制了探索，也让转移概率难以用于策略梯度更新。
+          </p>
+          <div class="equation">
+            \[
+              \mathbf{x}_t=(1-t)\mathbf{x}_0+t\mathbf{x}_1,\qquad
+              \frac{d\mathbf{x}_t}{dt}=\mathbf{v}_{\theta}(\mathbf{x}_t,t)
+            \]
+          </div>
+          <p class="notation-note">
+            这里 \(\mathbf{x}_0\) 表示数据样本，\(\mathbf{x}_1\) 表示噪声样本，\(t\in[0,1]\) 是连续时间变量，
+            \(\mathbf{v}_{\theta}\) 是学习到的速度场。
+          </p>
+          <p>
+            要应用强化学习，可以把连续生成路径离散为决策步骤。状态包含提示、时间与当前样本，动作是流模型预测的下一个状态：
+          </p>
+          <div class="equation">
+            \[
+              s_t=(\mathbf{z},t,\mathbf{x}_t),\qquad
+              a_t=\mathbf{x}_{t-\Delta t}
+            \]
+          </div>
+          <p class="notation-note">
+            这里 \(\mathbf{z}\) 是文本条件，\(\Delta t\) 是离散化步长，\(a_t\) 表示生成器产生的下一个样本状态。
+          </p>
+          <p>
+            直接的 ODE 表述是确定性的，这对在线强化学习造成障碍：策略梯度方法需要随机采样来探索不同轨迹、
+            并计算转移概率。Flow-GRPO 的做法是把确定性流转化为等价的随机微分方程——在保持边际分布不变的同时注入采样多样性
+            <a class="citation" href="#ref-23">[23]</a>。
+          </p>
+          <div class="equation">
+            \[
+              \mathrm{Pr}_{\theta}(a_t\mid s_t)
+              =
+              \mathcal{N}
+              \left(
+                a_t;\mu_{\theta}(\mathbf{x}_t,t,\mathbf{z}),\sigma_t^2\mathbf{I}
+              \right),
+              \qquad
+              \hat{A}_i=
+              \frac{R_{\mathrm{fm}}(\mathbf{x}_0^i,\mathbf{z})-\mathrm{mean}(\mathbf{R}_{\mathrm{fm}})}
+                   {\mathrm{std}(\mathbf{R}_{\mathrm{fm}})}
+            \]
+          </div>
+          <p class="notation-note">
+            这里 \(\mu_{\theta}\) 由学习到的速度场决定，\(\sigma_t\) 控制采样随机性，\(R_{\mathrm{fm}}\) 评估最终生成样本，
+            \(\hat{A}_i\) 由一条轨迹在采样组内的相对奖励计算。
+          </p>
+          <div class="equation">
+            \[
+              \mathcal{L}_{\mathrm{fmgrpo}}(\theta)
+              =
+              -
+              \mathbb{E}_{\mathbf{z}\sim S_z,\,\tau_{\mathrm{fm}}\sim \mathrm{Pr}(\cdot)}
+              \frac{1}{G}
+              \sum_{i=1}^{G}
+              \left[
+                \frac{1}{T}
+                \sum_t
+                \min
+                \left(
+                  \frac{\mathrm{Pr}_{\theta}(a_t^i\mid s_t^i)}
+                       {\mathrm{Pr}_{\theta_{\mathrm{old}}}(a_t^i\mid s_t^i)}
+                  \hat{A}_i,
+                  \mathrm{clip}
+                  \left(
+                    \frac{\mathrm{Pr}_{\theta}(a_t^i\mid s_t^i)}
+                         {\mathrm{Pr}_{\theta_{\mathrm{old}}}(a_t^i\mid s_t^i)},
+                    1-\epsilon,
+                    1+\epsilon
+                  \right)
+                  \hat{A}_i
+                \right)
+              \right]
+            \]
+          </div>
+          <p class="notation-note">
+            该目标在 Flow-GRPO 的表述下给出：把确定性流转化为随机 MDP，使在线强化学习能够采样轨迹并计算转移概率
+            <a class="citation" href="#ref-23">[23]</a>。
+          </p>
+          <aside class="callout">
+            <strong>基础说明。</strong>
+            这里展示的流匹配强化学习目标基于 Flow-GRPO。后续变体可以改变随机化方式、奖励归一化或 PPO/GRPO 风格的更新规则。
+          </aside>
+          <p>
+            这使流匹配与 GRPO 风格的优化兼容：模型对同一条件采样多条生成轨迹、评估每个最终样本、在组内归一化奖励，
+            再按得到的相对优势更新生成器。
+          </p>
+          <p>
+            更宏观的信息是：强化学习正在成为基础模型共享的优化接口。只要一个系统能产出候选输出并获得评价反馈，
+            许多同样的设计问题就会再次出现：如何定义奖励、如何高效采样、如何分配信用、如何防止奖励被投机利用。
+          </p>
+          <aside class="recap-card">
+            <h3>核心要义</h3>
+            <p>
+              纵观文本、推理、智能体与多模态生成，同一套抽象反复出现：产出候选行为，用反馈评估它，
+              并在控制成本、不稳定性和奖励投机的同时改进策略。
+            </p>
+          </aside>
+        </section>
+
+        <section class="chapter" id="conclusion">
+          <p class="chapter-number">第 8 节</p>
+          <h2>结论与未来方向</h2>
+          <p>
+            本文从 LLM 研究的视角介绍强化学习，思路只有一条，却被带到越来越丰富的场景中：模型产生行为，反馈评价该行为，
+            优化使策略朝更好的未来行为移动。前几节建立记号并搭建 PPO 风格的 RLHF 工作流；中间几节修补该工作流的薄弱环节；
+            后几节展示同一套反馈逻辑如何出现在推理模型、智能体系统与多模态模型中。
+          </p>
+          <p>
+            在这些场景中，强化学习已从一般的策略优化框架，演变为增强 LLM 推理、交互式决策与多模态生成能力的关键范式。
+            与此同时，教程在结尾强调这个领域远未定型：奖励可能昂贵、可能被投机利用；在线采样代价高；
+            扩展规律难以预测；持续自我改进目前更多是研究前沿，而非已成型的配方。
+          </p>
+          <div class="note-list">
+            <div id="future-pretraining">
+              <strong>面向预训练的强化学习。</strong> 现有研究大多在后训练阶段施加强化学习。把奖励驱动的学习延伸到预训练，
+              可能更早地塑造模型能力，但预训练规模上稳定、可扩展的优化仍是重大挑战。
+            </div>
+            <div id="future-efficiency">
+              <strong>更高效的强化学习训练。</strong> GRPO 等方法通过删去评论器模型等部件来简化强化学习。
+              但强化学习仍高度依赖在线采样，提高采样效率、降低训练成本仍是核心研究方向。
+            </div>
+            <div id="future-scaling">
+              <strong>预测强化学习的扩展极限。</strong> 强化学习的最终收益取决于模型能力、训练数据、奖励质量与优化配置。
+              能在完整规模运行之前估计潜在收益的方法，会让模型研发高效得多。
+            </div>
+            <div id="future-continual">
+              <strong>持续与自我进化的强化学习。</strong> 当前强化学习流水线通常在固定训练分布上优化、训练结束即停止。
+              更有雄心的方向，是让模型在部署后继续从自身的交互、反馈与积累的经验中学习。
+            </div>
+          </div>
+        </section>
+
+        <section class="chapter" id="systems">
+          <p class="chapter-number">附录</p>
+          <h2>常用系统与数据集</h2>
+          <p>
+            附录把这份入门变得可落地：列出面向 LLM 的现代强化学习所用的系统、数据集与环境。主章解释完概念后，
+            这层资料帮助读者为奖励建模、推理强化学习、智能体强化学习与多模态强化学习的后训练找到具体的工具与数据。
+            各系统对 PPO、GRPO、DPO、多模态训练、异步 rollout、工具调用与智能体环境的支持各不相同；
+            数据集则在反馈来源、规模、模态与目标用途上互有差异。
+          </p>
+          <h3>系统</h3>
+          <div class="table-scroll">
+            <table class="resource-table systems-table">
+              <thead>
+                <tr>
+                  <th>系统</th>
+                  <th>文本</th>
+                  <th>图像</th>
+                  <th>视频</th>
+                  <th>音频</th>
+                  <th>支持的训练方法</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td><a href="https://github.com/huggingface/trl">TRL</a></td><td>是</td><td>是</td><td>否</td><td>否</td><td>SFT、奖励建模、PPO、GRPO、RLOO、DPO、KTO、ORPO、Online-DPO；经由 OpenEnv/Harbor 支持智能体强化学习。</td></tr>
+                <tr><td><a href="https://github.com/OpenRLHF/OpenRLHF">OpenRLHF</a></td><td>是</td><td>是</td><td>否</td><td>否</td><td>SFT、奖励建模、PPO、REINFORCE++、GRPO、RLOO、Dr.GRPO、DPO、KTO；以单轮/多轮执行器支持智能体强化学习。</td></tr>
+                <tr><td><a href="https://github.com/verl-project/verl">verl</a></td><td>是</td><td>是</td><td>否</td><td>否</td><td>SFT、PPO、GRPO、GSPO、ReMax、REINFORCE++、RLOO、DAPO、Dr.GRPO；经由多轮工具调用支持智能体强化学习。</td></tr>
+                <tr><td><a href="https://github.com/langfengQ/verl-agent">verl-agent</a></td><td>是</td><td>是</td><td>否</td><td>否</td><td>GiGPO、GRPO、PPO、DAPO、GSPO、RLOO、REINFORCE++、LoRA；为长时域 LLM/VLM 智能体专门打造的智能体强化学习。</td></tr>
+                <tr><td><a href="https://github.com/hiyouga/EasyR1">EasyR1</a></td><td>是</td><td>是</td><td>否</td><td>否</td><td>GRPO、DAPO、REINFORCE++、ReMax、RLOO、GSPO、CISPO；不原生支持智能体强化学习。</td></tr>
+                <tr><td><a href="https://github.com/hiyouga/LLaMA-Factory">LLaMA-Factory</a></td><td>是</td><td>是</td><td>是</td><td>是</td><td>预训练、SFT、奖励建模、PPO、DPO、KTO、ORPO、SimPO；不原生支持智能体强化学习。</td></tr>
+                <tr><td><a href="https://github.com/ByteDance-Seed/VeOmni">VeOmni</a></td><td>是</td><td>是</td><td>是</td><td>是</td><td>单模态/多模态预训练与后训练、SFT 式训练、DPO、RL 训练器后端；无原生智能体强化学习环境栈。</td></tr>
+                <tr><td><a href="https://github.com/modelscope/ms-swift">ms-swift</a></td><td>是</td><td>是</td><td>是</td><td>是</td><td>预训练、SFT、奖励建模、PPO、GRPO、DPO、KTO、ORPO、CPO、SimPO、GKD；经由多轮 GRPO/工具使用训练支持智能体强化学习。</td></tr>
+                <tr><td><a href="https://github.com/PKU-Alignment/align-anything">Align-Anything</a></td><td>是</td><td>是</td><td>是</td><td>是</td><td>SFT、奖励建模、PPO、DPO、KTO、ORPO、SimPO、基于规则的强化学习；智能体强化学习在路线图上。</td></tr>
+                <tr><td><a href="https://github.com/OpenRLHF/OpenRLHF-M">OpenRLHF-M</a></td><td>否</td><td>是</td><td>否</td><td>否</td><td>面向多模态模型的 PPO、GRPO、RLOO、Online-RLHF、拒绝采样；不原生支持智能体强化学习。</td></tr>
+                <tr><td><a href="https://github.com/microsoft/DeepSpeed/tree/master/blogs/deepspeed-chat">DeepSpeed-Chat</a></td><td>是</td><td>否</td><td>否</td><td>否</td><td>SFT、奖励建模、基于 PPO 的 RLHF；不原生支持智能体强化学习。</td></tr>
+                <tr><td><a href="https://github.com/alibaba/ROLL">ROLL</a></td><td>是</td><td>是</td><td>否</td><td>否</td><td>SFT、DPO、蒸馏、PPO、GRPO、REINFORCE++、GSPO、RAFT++、StarPO、GiGPO；智能体强化学习。</td></tr>
+                <tr><td><a href="https://github.com/THUDM/slime">slime</a></td><td>是</td><td>否</td><td>否</td><td>否</td><td>PPO、GRPO、GSPO、REINFORCE++、OPD；经由自定义生成、工具、沙箱与验证器奖励支持智能体强化学习。</td></tr>
+                <tr><td><a href="https://github.com/Gen-Verse/OpenClaw-RL">OpenClaw-RL</a></td><td>是</td><td>是</td><td>否</td><td>否</td><td>二元 RL/GRPO、OPD、混合 RL、LoRA 训练；面向个性化智能体、终端、GUI、SWE 与工具调用场景的异步智能体强化学习。</td></tr>
+                <tr><td><a href="https://github.com/NovaSky-AI/SkyRL">SkyRL</a></td><td>是</td><td>否</td><td>否</td><td>否</td><td>GRPO、DAPO、异步 RL、兼容 Tinker 的训练；面向工具使用、检索、SQL 与长时域任务的智能体强化学习。</td></tr>
+                <tr><td><a href="https://github.com/microsoft/agent-lightning">Agent Lightning</a></td><td>是</td><td>否</td><td>否</td><td>否</td><td>RL、APO、SFT 式优化钩子；为既有智能体框架专门打造的智能体强化学习。</td></tr>
+                <tr><td><a href="https://github.com/mll-lab-nu/RAGEN">RAGEN</a></td><td>是</td><td>否</td><td>否</td><td>否</td><td>PPO/StarPO 风格多轮优化、环境奖励；智能体强化学习。</td></tr>
+                <tr><td><a href="https://github.com/PeterGriffinJin/Search-R1">Search-R1</a></td><td>是</td><td>否</td><td>否</td><td>否</td><td>面向“推理-检索交织”模型的 PPO、GRPO、REINFORCE；面向检索/工具使用的智能体强化学习。</td></tr>
+                <tr><td><a href="https://github.com/areal-project/AReaL">AReaL</a></td><td>是</td><td>否</td><td>否</td><td>否</td><td>PPO/GRPO 风格强化学习，与智能体框架集成；智能体强化学习。</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <h3>数据集</h3>
+          <div class="table-scroll">
+            <table class="resource-table datasets-table">
+              <thead>
+                <tr>
+                  <th>数据集</th>
+                  <th>奖励模型</th>
+                  <th>推理</th>
+                  <th>智能体</th>
+                  <th>规模</th>
+                  <th>模态</th>
+                  <th>来源</th>
+                  <th>类别</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td><a href="https://huggingface.co/datasets/Anthropic/hh-rlhf">Anthropic/hh-rlhf</a></td><td>是</td><td>否</td><td>否</td><td>169K</td><td>文本</td><td>人类</td><td>成对偏好</td></tr>
+                <tr><td><a href="https://huggingface.co/datasets/stanfordnlp/SHP-2">stanfordnlp/SHP-2</a></td><td>是</td><td>否</td><td>否</td><td>4.8M</td><td>文本</td><td>人类/众包</td><td>成对偏好</td></tr>
+                <tr><td><a href="https://huggingface.co/datasets/HuggingFaceH4/stack-exchange-preferences">H4/stack-exchange-preferences</a></td><td>是</td><td>否</td><td>否</td><td>10.7M</td><td>文本</td><td>众包评分</td><td>评分/排序</td></tr>
+                <tr><td><a href="https://huggingface.co/datasets/openai/summarize_from_feedback">Summarize from Feedback</a></td><td>是</td><td>否</td><td>否</td><td>64.8K</td><td>文本</td><td>人类</td><td>成对偏好</td></tr>
+                <tr><td><a href="https://huggingface.co/datasets/openbmb/UltraFeedback">UltraFeedback</a></td><td>是</td><td>否</td><td>否</td><td>64K / 340K</td><td>文本</td><td>GPT-4</td><td>评分、评述、成对数据</td></tr>
+                <tr><td><a href="https://huggingface.co/datasets/berkeley-nest/Nectar">berkeley-nest/Nectar</a></td><td>是</td><td>否</td><td>否</td><td>183K / 3.8M</td><td>文本</td><td>GPT-4</td><td>7 路排序</td></tr>
+                <tr><td><a href="https://huggingface.co/datasets/Skywork/Skywork-Reward-Preference-80K-v0.2">Skywork-Reward-Preference-80K</a></td><td>是</td><td>否</td><td>否</td><td>80K</td><td>文本</td><td>混合/精选</td><td>成对偏好</td></tr>
+                <tr><td><a href="https://huggingface.co/datasets/nvidia/HelpSteer">nvidia/HelpSteer</a></td><td>是</td><td>否</td><td>否</td><td>37K</td><td>文本</td><td>人类</td><td>属性评分</td></tr>
+                <tr><td><a href="https://huggingface.co/datasets/nvidia/HelpSteer2">nvidia/HelpSteer2</a></td><td>是</td><td>否</td><td>否</td><td>1 万对</td><td>文本</td><td>人类</td><td>属性评分/偏好</td></tr>
+                <tr><td><a href="https://huggingface.co/datasets/nvidia/HelpSteer3">nvidia/HelpSteer3</a></td><td>是</td><td>否</td><td>否</td><td>4 万偏好</td><td>文本</td><td>人类</td><td>偏好、反馈、编辑</td></tr>
+                <tr><td><a href="https://huggingface.co/datasets/lmarena-ai/arena-human-preference-55k">Arena Human Preference 55K</a></td><td>是</td><td>否</td><td>否</td><td>55K</td><td>文本</td><td>人类用户</td><td>竞技场对战偏好</td></tr>
+                <tr><td><a href="https://huggingface.co/datasets/MMInstruction/VLFeedback">VLFeedback</a></td><td>是</td><td>否</td><td>否</td><td>80K / 380K</td><td>文本、图像</td><td>GPT-4V</td><td>多模态偏好</td></tr>
+                <tr><td><a href="https://github.com/RLHF-V/RLHF-V">RLHF-V-Dataset</a></td><td>是</td><td>否</td><td>否</td><td>5.7K</td><td>文本、图像</td><td>人类</td><td>细粒度纠正</td></tr>
+                <tr><td><a href="https://huggingface.co/datasets/openbmb/RLAIF-V-Dataset">openbmb/RLAIF-V-Dataset</a></td><td>是</td><td>否</td><td>否</td><td>83K</td><td>文本、图像</td><td>AI 反馈</td><td>成对偏好</td></tr>
+                <tr><td><a href="https://huggingface.co/datasets/OpenGVLab/MMPR-v1.2">OpenGVLab/MMPR-v1.2</a></td><td>是</td><td>是</td><td>否</td><td>3M</td><td>文本、图像</td><td>AI/验证器</td><td>多模态推理偏好</td></tr>
+                <tr><td><a href="https://huggingface.co/datasets/open-r1/OpenR1-Math-220k">open-r1/OpenR1-Math-220k</a></td><td>否</td><td>是</td><td>否</td><td>220K</td><td>文本</td><td>验证器/评审</td><td>数学推理轨迹</td></tr>
+                <tr><td><a href="https://huggingface.co/collections/AI-MO/numinamath">AI-MO/NuminaMath</a></td><td>否</td><td>是</td><td>否</td><td>900K</td><td>文本</td><td>规则/GPT-4</td><td>数学 CoT / TIR</td></tr>
+                <tr><td><a href="https://huggingface.co/datasets/PRIME-RL/Eurus-2-RL-Data">PRIME-RL/Eurus-2-RL-Data</a></td><td>否</td><td>是</td><td>否</td><td>482K</td><td>文本</td><td>验证器</td><td>数学/代码结果奖励</td></tr>
+                <tr><td><a href="https://huggingface.co/datasets/AgentGym/AgentGym-RL-Data-ID">AgentGym-RL-Data</a></td><td>否</td><td>是</td><td>是</td><td>184K</td><td>文本</td><td>环境</td><td>多轮智能体奖励</td></tr>
+                <tr><td><a href="https://github.com/alfworld/alfworld">ALFWorld</a></td><td>否</td><td>否</td><td>是</td><td>3.5K 训练</td><td>文本</td><td>环境</td><td>文本世界任务奖励</td></tr>
+                <tr><td><a href="https://github.com/princeton-nlp/WebShop">WebShop</a></td><td>否</td><td>否</td><td>是</td><td>1.2 万任务</td><td>文本</td><td>环境</td><td>网购模拟奖励</td></tr>
+                <tr><td><a href="https://github.com/PeterGriffinJin/Search-R1">Search-R1 Data</a></td><td>否</td><td>是</td><td>是</td><td>17 万训练</td><td>文本</td><td>检索器/规则</td><td>检索工具问答奖励</td></tr>
+                <tr><td><a href="https://github.com/langfengQ/verl-agent">Sokoban</a></td><td>否</td><td>是</td><td>是</td><td>环境生成</td><td>文本、图像</td><td>环境</td><td>推箱解谜奖励</td></tr>
+                <tr><td><a href="https://github.com/langfengQ/verl-agent">Gym Cards</a></td><td>否</td><td>是</td><td>是</td><td>环境生成</td><td>文本、图像</td><td>环境</td><td>逻辑牌戏奖励</td></tr>
+                <tr><td><a href="https://github.com/OpenBMB/ToolBench">ToolBench</a></td><td>否</td><td>是</td><td>是</td><td>126K</td><td>文本</td><td>API 执行</td><td>工具使用轨迹</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p>
+            这层资料用具体的系统与数据集补充主体介绍。由于新方法与系统出现得很快——尤其在推理强化学习、
+            智能体强化学习与多模态强化学习后训练周围——本网站提供的是一个进入周边生态的紧凑入口。
+          </p>
+          <p class="update-note">
+            注：系统表整理于 2026 年 8 月。部分系统可能在发布后发生了变化；若当前版本与表中信息不符，
+            请联系作者以便更新信息。
+          </p>
+          <div class="note-list">
+            <div><strong>偏好数据。</strong> 用于奖励建模与偏好优化的人类或 AI 比较数据。</div>
+            <div><strong>推理数据。</strong> 数学、代码、工具集成推理与验证器打分的轨迹。</div>
+            <div><strong>智能体环境。</strong> 带观测、动作与延迟奖励的交互式任务。</div>
+            <div><strong>训练系统。</strong> 支撑 PPO、GRPO、DPO、多模态后训练与智能体强化学习的基础设施。</div>
+          </div>
+        </section>
+        <section class="chapter references" id="references">
+          <p class="chapter-number">选读文献</p>
+          <h2>参考文献（按学术惯例保留英文原文，不翻译）</h2>
+          <ol class="reference-list">
+            <li id="ref-1">Richard S. Sutton and Andrew G. Barto. <em>Reinforcement Learning: An Introduction (2nd ed.)</em>. The MIT Press, 2018.</li>
+            <li id="ref-2">Long Ouyang, Jeffrey Wu, Xu Jiang, Diogo Almeida, Carroll L. Wainwright, Pamela Mishkin, Chong Zhang, Sandhini Agarwal, Katarina Slama, Alex Ray, John Schulman, Jacob Hilton, Fraser Kelton, Luke Miller, Maddie Simens, Amanda Askell, Peter Welinder, Paul F. Christiano, Jan Leike, and Ryan Lowe. Training language models to follow instructions with human feedback. <em>NeurIPS 2022</em>, 2022.</li>
+            <li id="ref-3">Paul F. Christiano, Jan Leike, Tom B. Brown, Miljan Martic, Shane Legg, and Dario Amodei. Deep reinforcement learning from human preferences. <em>NeurIPS 2017</em>, 2017.</li>
+            <li id="ref-4">John Schulman, Filip Wolski, Prafulla Dhariwal, Alec Radford, and Oleg Klimov. Proximal policy optimization algorithms, 2017.</li>
+            <li id="ref-5">Ralph Allan Bradley and Milton E. Terry. Rank analysis of incomplete block designs: I. the method of paired comparisons. <em>Biometrika</em>, 1952.</li>
+            <li id="ref-6">Dakota Mahan, Duy Van Phung, Rafael Rafailov, Chase Blagden, Nathan Lile, Louis Castricato, Jan-Philipp Franken, Chelsea Finn, and Alon Albalak. Generative reward models, 2024.</li>
+            <li id="ref-7">Tianci Liu, Ran Xu, Tony Yu, Ilgee Hong, Carl Yang, Tuo Zhao, and Haoyu Wang. OpenRubrics: Towards scalable synthetic rubric generation for reward modeling and LLM alignment. <em>ACL 2026</em>, 2026.</li>
+            <li id="ref-8">Nathan Lambert, Valentina Pyatkin, Jacob Morrison, LJ Miranda, Bill Yuchen Lin, Khyathi Chandu, Nouha Dziri, Sachin Kumar, Tom Zick, Yejin Choi, Noah A. Smith, and Hannaneh Hajishirzi. RewardBench: Evaluating reward models for language modeling. <em>Findings of NAACL 2025</em>, 2025.</li>
+            <li id="ref-9">John Schulman, Philipp Moritz, Sergey Levine, Michael I. Jordan, and Pieter Abbeel. High-dimensional continuous control using generalized advantage estimation. <em>ICLR 2016</em>, 2016.</li>
+            <li id="ref-10">Zhihong Shao, Peiyi Wang, Qihao Zhu, Runxin Xu, Junxiao Song, Xiao Bi, Haowei Zhang, Mingchuan Zhang, YK Li, Y Wu, et al. DeepSeekMath: Pushing the limits of mathematical reasoning in open language models, 2024.</li>
+            <li id="ref-11">Rafael Rafailov, Archit Sharma, Eric Mitchell, Christopher D. Manning, Stefano Ermon, and Chelsea Finn. Direct preference optimization: Your language model is secretly a reward model. <em>NeurIPS 2023</em>, 2023.</li>
+            <li id="ref-12">DeepSeek. DeepSeek-R1: Incentivizing reasoning capability in LLMs via reinforcement learning, 2025.</li>
+            <li id="ref-13">Hunter Lightman, Vineet Kosaraju, Yuri Burda, Harrison Edwards, Bowen Baker, Teddy Lee, Jan Leike, John Schulman, Ilya Sutskever, and Karl Cobbe. Let's verify step by step. <em>ICLR 2024</em>, 2024.</li>
+            <li id="ref-14">David Silver, Julian Schrittwieser, Karen Simonyan, Ioannis Antonoglou, Aja Huang, Arthur Guez, Thomas Hubert, Lucas Baker, Matthew Lai, Adrian Bolton, et al. Mastering the game of Go without human knowledge. <em>Nature</em>, 2017.</li>
+            <li id="ref-15">Shunyu Yao, Jeffrey Zhao, Dian Yu, Nan Du, Izhak Shafran, Karthik R. Narasimhan, and Yuan Cao. ReAct: Synergizing reasoning and acting in language models. <em>ICLR 2023</em>, 2023.</li>
+            <li id="ref-16">Timo Schick, Jane Dwivedi-Yu, Roberto Dessi, Roberta Raileanu, Maria Lomeli, Eric Hambro, Luke Zettlemoyer, Nicola Cancedda, and Thomas Scialom. Toolformer: Language models can teach themselves to use tools. <em>NeurIPS 2023</em>, 2023.</li>
+            <li id="ref-17">Cheng Qian, Emre Can Acikgoz, Qi He, Hongru Wang, Xiusi Chen, Dilek Hakkani-Tur, Gokhan Tur, and Heng Ji. ToolRL: Reward is all tool learning needs. <em>NeurIPS 2025</em>, 2025.</li>
+            <li id="ref-18">Mengkang Hu, Pu Zhao, Can Xu, Qingfeng Sun, Jian-Guang Lou, Qingwei Lin, Ping Luo, and Saravan Rajmohan. AgentGen: Enhancing planning abilities for large language model based agent via environment and task generation. <em>KDD 2025</em>, 2025.</li>
+            <li id="ref-19">Zhiwei Li, Yong Hu, and Wenqing Wang. Encouraging good processes without the need for good answers: Reinforcement learning for LLM agent planning. <em>EMNLP Industry Track 2025</em>, 2025.</li>
+            <li id="ref-20">Noah Shinn, Federico Cassano, Ashwin Gopinath, Karthik Narasimhan, and Shunyu Yao. Reflexion: language agents with verbal reinforcement learning. <em>NeurIPS 2023</em>, 2023.</li>
+            <li id="ref-21">Zhiqing Sun, Sheng Shen, Shengcao Cao, Haotian Liu, Chunyuan Li, Yikang Shen, Chuang Gan, Liangyan Gui, Yu-Xiong Wang, Yiming Yang, Kurt Keutzer, and Trevor Darrell. Aligning large multimodal models with factually augmented RLHF. <em>Findings of ACL 2024</em>, 2024.</li>
+            <li id="ref-22">Ying Fan, Olivia Watkins, Yuqing Du, Hao Liu, Moonkyung Ryu, Craig Boutilier, Pieter Abbeel, Mohammad Ghavamzadeh, Kangwook Lee, and Kimin Lee. DPOK: Reinforcement learning for fine-tuning text-to-image diffusion models. <em>NeurIPS 2023</em>, 2023.</li>
+            <li id="ref-23">Jie Liu, Gongye Liu, Jiajun Liang, Yangguang Li, Jiaheng Liu, Xintao Wang, Pengfei Wan, Di Zhang, and Wanli Ouyang. Flow-GRPO: Training flow matching models via online RL. <em>NeurIPS 2025</em>, 2025.</li>
+            <li id="ref-24">David Silver, Satinder Singh, Doina Precup, and Richard S. Sutton. Reward is enough. <em>Artificial Intelligence</em>, 2021.</li>
+            <li id="ref-25">Sikuan Yan, Xiufeng Yang, Zuchao Huang, Ercong Nie, Zifeng Ding, Zonggen Li, Xiaowen Ma, Jinhe Bi, Kristian Kersting, Jeff Z. Pan, Hinrich Schuetze, Volker Tresp, and Yunpu Ma. Memory-R1: Enhancing large language model agents to manage and utilize memories via reinforcement learning. <em>ACL 2026</em>, 2026.</li>
+            <li id="ref-26">Yu Wang, Ryuichi Takanobu, Zhiqi Liang, Yuzhen Mao, Yuanzhe Hu, Julian McAuley, and Xiaojian Wu. Mem-alpha: Learning memory construction via reinforcement learning, 2025.</li>
+            <li id="ref-27">Peng Xia, Jianwen Chen, Hanyang Wang, Jiaqi Liu, Kaide Zeng, Yu Wang, Siwei Han, Yiyang Zhou, Xujiang Zhao, Haifeng Chen, et al. SkillRL: Evolving agents via recursive skill-augmented reinforcement learning, 2026.</li>
+            <li id="ref-28">Dayuan Fu, Keqing He, Yejie Wang, Wentao Hong, Zhuoma Gongque, Weihao Zeng, Wei Wang, Jingang Wang, Xunliang Cai, and Weiran Xu. AgentRefine: Enhancing agent generalization through refinement tuning. <em>ICLR 2025</em>, 2025.</li>
+            <li id="ref-29">Yifan Song, Da Yin, Xiang Yue, Jie Huang, Sujian Li, and Bill Yuchen Lin. Trial and error: Exploration-based trajectory optimization of LLM agents. <em>ACL 2024</em>, 2024.</li>
+          </ol>
+        </section>
+
+        <nav class="reader-footer" aria-label="读本页脚">
+          <a href="index.html">中文版项目主页</a>
+          <a href="../../index.html">返回中文目录</a>
+          <a href="assets/rl-without-tears.pdf">英文完整 PDF</a>
+        </nav>
+      </article>
+    </main>
+  </body>
+</html>
