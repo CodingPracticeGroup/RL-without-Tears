@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>第 7 章 多模态强化学习 —《RL without Tears》中文全译</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="../../assets/favicon/favicon-32.png">
+    <link rel="stylesheet" href="pdf.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+    <script defer src="../site/math.js"></script>
+  </head>
+  <body>
+    <div class="zh-banner">
+      《RL without Tears》中文全译（AI 辅助翻译，非官方译本） ·
+      <a href="../../index.html">中文目录</a> ·
+      <a href="index.html">PDF 版目录</a> ·
+      <a href="https://niutrans.github.io/RL-without-Tears/">英文原版网站</a>
+    </div>
+    <div class="wrap">
+      <p class="crumbs"><a href="index.html">← PDF 版目录</a></p>
+                                    <h1>第 7 章 多模态强化学习</h1>
+      <p class="subtitle">Multimodal RL</p>
+      <p class="chapter-meta">
+        对应英文原版 PDF 第 74–79 页（§7）。公式编号与原书一致（82 起）；图表为原书页截图或依据原文重排的译文。
+      </p>
+
+      <h2>7 多模态强化学习</h2>
+      <p>
+        多模态学习旨在构建能处理并融合多种模态（如视觉与文本）信息的模型。通过结合不同模态的互补信号，多模态模型可以获得比单模态系统
+        更全面的感知与推理能力。这些能力支撑了广泛的应用，包括图像描述、视觉推理、语音理解与图像生成（Baltrušaitis et al., 2018）。
+      </p>
+      <p>
+        随着 LLM 的快速发展，一个自然的方向是把其强大的推理与生成能力扩展到多模态领域。例如，可以把 LLM 与视觉编码器对齐、
+        在大规模图文对上做监督微调，从而构建视觉语言模型。然而，把 LLM 能力扩展到新的模态会引入新的对齐挑战：
+        即使 LLM 在语言域已与人偏好实现很强的对齐，这种对齐也未必能迁移到其他模态。例如，模型可能给出有帮助的文本回复，
+        却仍产生与视觉不一致或错位的输出。因此需要额外的对齐策略，按各模态特有的目标优化多模态模型。
+      </p>
+    </div>
+  </body>
+</html>
