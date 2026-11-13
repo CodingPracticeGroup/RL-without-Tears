@@ -54,7 +54,7 @@
         推理时，每一步选中的词元拼接到上下文，再用于条件化下一次预测。
       </p>
       <figure class="float">
-        <img src="figs/p07-fig1.png" alt="图1：语言模型训练与自回归生成">
+        <img src="figs/p07-fig1.png?v=figfix3" alt="图1：语言模型训练与自回归生成">
         <figcaption>
           <strong>图 1：</strong>语言模型训练与自回归生成。(a) 下一词元预测：LLM 从前文上下文预测下一词元的分布，
           用交叉熵将该预测分布与观察到的目标词元比对。(b) 自回归生成：LLM 在提示与此前已生成词元的条件下，
@@ -290,7 +290,7 @@
         执行动作后，环境转移到新状态 \(s_{t+1}\)，并返回与该动作对应的奖励 \(r_t\)。
       </p>
       <figure class="float">
-        <img src="figs/p12-fig2.png" alt="图2：面向 LLM 的强化学习示意">
+        <img src="figs/p12-fig2.png?v=figfix3" alt="图2：面向 LLM 的强化学习示意">
         <figcaption>
           <strong>图 2：</strong>面向 LLM 的强化学习示意图。LLM 作为智能体在状态 \(s_t=(\mathbf{x},\mathbf{y}_{\lt t})\) 下采样动作
           \(a_t=y_t\)；奖励模型给出 \(R(s_t,a_t)\)，价值函数估计 \(V(s_t),Q(s_t,a_t)\)，策略据此被优化。

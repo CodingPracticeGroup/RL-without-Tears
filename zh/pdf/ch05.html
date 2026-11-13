@@ -51,7 +51,7 @@
         为解决这个问题，可以引入奖励模型的引导来做测试时扩展，见下文各小节。
       </p>
       <figure class="float">
-        <img src="figs/p48-fig22.png?v=figfix2" alt="图22：Best-of-n 采样">
+        <img src="figs/p48-fig22.png?v=figfix3" alt="图22：Best-of-n 采样">
         <figcaption>
           <strong>图 22：</strong>Best-of-n 采样。给定一个输入，采样多个候选输出，再用奖励模型选出最佳输出。
           在没有奖励模型的场景，也可以用多数投票决定最终输出。例如本图中，多数输出给出的答案是 290，
@@ -155,7 +155,7 @@
         <sup>10</sup> 当 MCTS 使用置信上界策略做节点选择时，所得算法通常称为“应用于树的置信上界”（Upper Confidence bounds applied to Trees，UCT）。
       </p>
       <figure class="float">
-        <img src="figs/p51-fig23.png?v=figfix2" alt="图23：带贪心搜索的逐步验证">
+        <img src="figs/p51-fig23.png?v=figfix3" alt="图23：带贪心搜索的逐步验证">
         <figcaption>
           <strong>图 23：</strong>带贪心搜索的逐步验证。该流程可以很容易地扩展为束搜索：在每一步从所有候选路径中保留得分靠前的步骤，
           进一步扩展测试时计算。蓝色线表示可以借助验证反馈（如奖励）对推理步骤进行细化（self-refinement），以提升准确率。
@@ -177,7 +177,7 @@
         它们反映各节点被探索的频率。此外，这一阶段还能纳入延迟奖励，用于调整 \(\hat{R}(\bar{\mathbf{y}}_k)\) 的值。
       </p>
       <figure class="float">
-        <img src="figs/p52-fig24.png?v=figfix2" alt="图24：带 MCTS 的逐步验证示意">
+        <img src="figs/p52-fig24.png?v=figfix3" alt="图24：带 MCTS 的逐步验证示意">
         <figcaption>
           <strong>图 24：</strong>带 MCTS 的逐步验证示意。过程由四个阶段构成：(1) 选择：算法沿决策树导航，依据 UCT 等策略选出最有潜力的节点；
           (2) 扩展：向树中加入新的潜在节点以供进一步探索；(3) 模拟：通过模拟可能的结果（即推理路径）评估每个新节点；
@@ -196,7 +196,7 @@
         它能生成更清晰、更可理解的推理路径。图 25 给出了迭代强化学习过程的示意，这里概述各个阶段。
       </p>
       <figure class="float">
-        <img src="figs/p53-fig25.png?v=figfix2" alt="图25：DeepSeek-R1 的迭代强化学习示意">
+        <img src="figs/p53-fig25.png?v=figfix3" alt="图25：DeepSeek-R1 的迭代强化学习示意">
         <figcaption>
           <strong>图 25：</strong>DeepSeek-R1（Guo et al., 2025）中迭代强化学习的示意。该方法通过多阶段强化学习训练出稳健的推理 LLM，
           使用 GRPO 算法。最初，用少量高质量带标注推理数据经 SFT 微调预训练 LLM 作为冷启动；随后针对推理能力施加大规模强化学习；
@@ -280,7 +280,7 @@
         而不只是模仿教师生成的完整轨迹。
       </p>
       <figure class="float">
-        <img src="figs/p56-fig26.png?v=figfix2" alt="图26：OPD 示意">
+        <img src="figs/p56-fig26.png?v=figfix3" alt="图26：OPD 示意">
         <figcaption>
           <strong>图 26：</strong>OPD 示意（Agarwal et al., 2024）。学生模型按当前策略生成轨迹；教师模型在学生访问到的状态上
           提供下一词元的分布监督。教师与学生分布之间的差异用于构造稠密的词元级奖励，供优化学生模型使用。

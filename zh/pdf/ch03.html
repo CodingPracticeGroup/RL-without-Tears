@@ -75,7 +75,7 @@
         这里从 LLM 研究的视角出发，改用概率记号 \(\mathrm{Pr}_{\theta}(\cdot\mid\mathbf{x})\)，这对本领域读者更熟悉。
       </p>
       <figure class="float">
-        <img src="figs/p15-fig3.png" alt="图3：用策略梯度训练 LLM 示意">
+        <img src="figs/p15-fig3.png?v=figfix3" alt="图3：用策略梯度训练 LLM 示意">
         <figcaption>
           <strong>图 3：</strong>用策略梯度训练 LLM 的示意。核心组件是一个 LLM。给定输入
           \(\mathbf{x}=x_1\ldots x_m\)，从 LLM 采样一个输出 \(\mathbf{y}\)。注意采样阶段不计算梯度——采样是自回归地进行的，
@@ -107,7 +107,7 @@
         输出空间因此极其庞大，穷举所有可能输出在计算上不可行。
       </p>
       <figure class="float">
-        <img src="figs/p16-fig4.png?v=figfix2" alt="图4：从假设空间重排视角看 LLM 的强化学习机制">
+        <img src="figs/p16-fig4.png?v=figfix3" alt="图4：从假设空间重排视角看 LLM 的强化学习机制">
         <figcaption>
           <strong>图 4：</strong>从假设空间重排的视角看强化学习训练 LLM 的机制：给定输入 \(\mathbf{x}\)，模型提高假设空间内较长输出
           （如 \(\mathbf{y}_3\)）的概率——方法是给它们更高奖励；反之，\(\mathbf{y}_1\) 这类较短输出得到较低奖励，概率被压低。
@@ -141,7 +141,7 @@
         并惩罚不满足目标的较短输出。
       </p>
       <figure class="float">
-        <img src="figs/p17-fig5.png?v=figfix2" alt="图5：相同词元获得差异巨大奖励的采样输出示例">
+        <img src="figs/p17-fig5.png?v=figfix3" alt="图5：相同词元获得差异巨大奖励的采样输出示例">
         <figcaption>
           <strong>图 5：</strong>采样输出示例：同样的词元会得到显著不同的奖励（即 16 对 75）。这会在策略梯度的优化过程中引入很高的梯度方差。
           （原图截取自英文原版 PDF 第 17 页）
@@ -223,7 +223,7 @@
       <p>基于这一训练目标，LLM 训练的损失函数可写成：</p>
       <div class="equation">\[ \mathcal{L}(\theta) \;=\; -\mathbb{E}_{\mathbf{x}\sim\mathcal{S}_x,\mathbb{E}_{\mathbf{y}\sim\mathcal{D}}}\left[\sum_{t=1}^{T}\log \mathrm{Pr}_{\theta}(y_t\mid\mathbf{x},\mathbf{y}_{\lt t})A_t\right] \tag{24} \]</div>
       <figure class="float">
-        <img src="figs/p19-fig6.png" alt="图6：基于预训练 LLM 的价值模型架构">
+        <img src="figs/p19-fig6.png?v=figfix3" alt="图6：基于预训练 LLM 的价值模型架构">
         <figcaption>
           <strong>图 6：</strong>基于预训练 LLM 的价值模型架构。主体仍然是一个 LLM。对给定序列 \(\mathrm{seq}_{\mathbf{x},\mathbf{y}}=[\mathbf{x},\mathbf{y}]\)，
           模型抽取 \(\mathbf{y}\) 中各词元位置的表示，再分别经线性映射得到标量。每个标量表示对应 \(\mathbf{y}\) 中该词元的价值。
@@ -267,7 +267,7 @@
       </p>
       <div class="equation">\[ \mathcal{L}(\theta) \;=\; -\mathbb{E}_{\mathbf{x}\sim\mathcal{S}_x}\mathbb{E}_{\mathbf{y}\sim\mathrm{Pr}_{\theta_{\mathrm{ref}}}(\cdot\mid\mathbf{x})}\left[\sum_{t=1}^{T}\frac{\mathrm{Pr}_{\theta}(y_t\mid\mathbf{x},\mathbf{y}_{\lt t})}{\mathrm{Pr}_{\theta_{\mathrm{ref}}}(y_t\mid\mathbf{x},\mathbf{y}_{\lt t})}A_t\right] \tag{28} \]</div>
       <figure class="float">
-        <img src="figs/p20-fig7.png?v=figfix2" alt="图7：在策略梯度 LLM 训练中引入重要性采样的工作流">
+        <img src="figs/p20-fig7.png?v=figfix3" alt="图7：在策略梯度 LLM 训练中引入重要性采样的工作流">
         <figcaption>
           <strong>图 7：</strong>在策略梯度训练 LLM 时引入重要性采样的工作流。第 1 步：同步当前策略，建立参考策略；
           第 2 步：给定输入 \(\mathbf{x}\)，从参考策略采样输出 \(\mathbf{y}\)；第 3 步：用序列 \([\mathbf{x},\mathbf{y}]\) 多次优化当前策略。
@@ -299,7 +299,7 @@
         <sup>5</sup> 在监督学习中，坏样本在训练步内造成的糟糕更新，通常能在后续步骤被好样本纠正。
       </p>
       <figure class="float">
-        <img src="figs/p21-fig8.png?v=figfix2" alt="图8：糟糕一步对重要性采样训练循环内采样的影响">
+        <img src="figs/p21-fig8.png?v=figfix3" alt="图8：糟糕一步对重要性采样训练循环内采样的影响">
         <figcaption>
           <strong>图 8：</strong>在采用重要性采样的 LLM 训练循环中，糟糕一步（terrible step）对采样的影响。
           左：糟糕一步采样出带有轻微重复的较差输出；右：糟糕一步之后，后续采样出现更严重的重复。
@@ -332,7 +332,7 @@
         防止过大的更新、促进学习过程稳定。裁剪版本可以写成：
       </p>
       <figure class="float">
-        <img src="figs/p22-fig9.png" alt="图9：PPO 在时间步 t 的裁剪示意">
+        <img src="figs/p22-fig9.png?v=figfix3" alt="图9：PPO 在时间步 t 的裁剪示意">
         <figcaption>
           <strong>图 9：</strong>PPO 在时间步 \(t\) 的裁剪。基本思想仍可用图 4 的假设空间来表述。子图 (a)：优势 \(A_t\) 为正，
           说明该输出受偏好——在假设空间内，采样输出的概率被提升，但最多提升到 \(1+\epsilon\)；子图 (b)：优势 \(A_t\) 为负，
@@ -373,7 +373,7 @@
         这里选最后一个位置的表示，是因为它凝结了整个序列的语义信息。
       </p>
       <figure class="float">
-        <img src="figs/p23-fig10.png" alt="图10：基于 LLM 的奖励模型架构">
+        <img src="figs/p23-fig10.png?v=figfix3" alt="图10：基于 LLM 的奖励模型架构">
         <figcaption>
           <strong>图 10：</strong>基于 LLM 的奖励模型架构。与图 6 的价值模型不同，本模型抽取输出 \(\mathbf{y}\) 最后一个位置的表示
           来代表整个序列 \([\mathbf{x},\mathbf{y}]\)，再经线性变换映射为标量，作为该输出的奖励。
@@ -439,7 +439,7 @@
       </p>
       <div class="equation">\[ r_t \;=\; \begin{cases} 0 & \text{if } t \lt T\\[2pt] R_{\hat{\phi}}(\mathbf{x},\mathbf{y}) & \text{if } t = T \end{cases} \tag{38} \]</div>
       <figure class="float">
-        <img src="figs/p25-fig11.png?v=figfix2" alt="图11：用 Bradley-Terry 模型计算损失的示例">
+        <img src="figs/p25-fig11.png?v=figfix3" alt="图11：用 Bradley-Terry 模型计算损失的示例">
         <figcaption>
           <strong>图 11：</strong>用 Bradley-Terry 模型计算损失的示例。给定输入 \(\mathbf{x}\) 与两个输出
           \((\mathbf{y}_a,\mathbf{y}_b)\)，其中 \(\mathbf{y}_a\succ\mathbf{y}_b\)：先分别对序列
@@ -479,7 +479,7 @@
         给定上下文，该策略决定 LLM 下一个词元的选取。它在奖励模型与价值模型的共同监督下训练。
       </p>
       <figure class="float">
-        <img src="figs/p26-fig12.png?v=figfix2" alt="图12：基于 PPO 的优化工作流示意">
+        <img src="figs/p26-fig12.png?v=figfix3" alt="图12：基于 PPO 的优化工作流示意">
         <figcaption>
           <strong>图 12：</strong>基于 PPO 的优化工作流示意。在已优化好的奖励模型与参考模型的帮助下，训练策略模型和价值模型。
           每个预测步，我们计算 PPO 损失之和并更新策略参数——这需要用到手上的奖励模型、参考模型与价值模型；同时更新价值模型参数。
