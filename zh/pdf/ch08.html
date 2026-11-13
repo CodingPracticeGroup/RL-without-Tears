@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>第 8 章 结论与未来方向 —《RL without Tears》中文全译</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="../../assets/favicon/favicon-32.png">
+    <link rel="stylesheet" href="pdf.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+    <script defer src="../site/math.js"></script>
+  </head>
+  <body>
+    <div class="zh-banner">
+      《RL without Tears》中文全译（AI 辅助翻译，非官方译本） ·
+      <a href="../../index.html">中文目录</a> ·
+      <a href="index.html">PDF 版目录</a> ·
+      <a href="https://niutrans.github.io/RL-without-Tears/">英文原版网站</a>
+    </div>
+    <div class="wrap">
+      <p class="crumbs"><a href="index.html">← PDF 版目录</a></p>
+                                    <h1>第 8 章 结论与未来方向</h1>
+      <p class="subtitle">Conclusions and Future Directions</p>
+      <p class="chapter-meta">
+        对应英文原版 PDF 第 80–81 页（§8）。
+      </p>
+
+      <h2>8 结论与未来方向</h2>
+      <p>
+        本文从 LLM 训练的视角介绍了强化学习的基本概念。我们从强化学习的基本表述与算法出发，涵盖策略梯度、优势估计、重要性采样与奖励建模，
+        并通过 LLM 训练的例子加以讲解；随后讨论了强化学习的近期进展，进一步把讨论扩展到推理模型、智能体系统与多模态模型，
+        展示强化学习如何从通用的策略优化框架，演进为增强 LLM 推理、交互式决策与多模态生成能力的关键范式。
+      </p>
+      <p>
+        尽管强化学习在 LLM 训练中已相当成熟、取得了显著成果，仍有若干有前景的方向值得未来探索：
+      </p>
+      <p>
+        • <strong>面向预训练的强化学习。</strong>现有研究大多聚焦后训练阶段应用强化学习，其在预训练中的作用仍探索不足。
+        把奖励驱动的学习扩展到预训练阶段，可能为在训练更早的环节塑造模型能力提供途径。近期研究已开始展现这一方向的潜力（Dong et al., 2025），
+        但要在预训练规模实现稳定可扩展的优化仍是重要挑战。
+      </p>
+      <p>
+        • <strong>更高效的强化学习训练。</strong>GRPO 等新方法通过去掉评论器模型等组件简化了强化学习训练，但强化学习仍严重依赖在线采样，
+        带来可观的计算与时间成本。提升采样效率、降低整体训练成本，仍是未来研究的重要方向。
+      </p>
+      <!-- 接续原书页81 -->
+    </div>
+  </body>
+</html>

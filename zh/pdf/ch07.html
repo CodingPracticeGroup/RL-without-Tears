@@ -37,6 +37,234 @@
         即使 LLM 在语言域已与人偏好实现很强的对齐，这种对齐也未必能迁移到其他模态。例如，模型可能给出有帮助的文本回复，
         却仍产生与视觉不一致或错位的输出。因此需要额外的对齐策略，按各模态特有的目标优化多模态模型。
       </p>
+      <p>
+        强化学习为应对这一挑战提供了自然框架：基于任务特定的反馈信号优化多模态模型。与监督微调相比，强化学习可以直接优化高层目标，
+        如人类偏好、视觉质量与语义一致性。本节讨论强化学习在不同类型多模态模型上的应用。我们先介绍面向多模态理解模型的强化学习：
+        这类模型的输出仍以文本为主，但输入涉及多种模态；随后讨论面向多模态生成模型的强化学习，包括基于扩散与基于流匹配的模型，
+        其中强化学习用于优化生成内容的质量。
+      </p>
+
+      <h2>7.1 多模态理解模型</h2>
+      <p>
+        多模态模型可粗略分为两类：生成非文本内容的，与把非文本内容作为输入的。本小节聚焦后者，即多模态理解模型。
+        虽然这类模型可以处理图像、视频、音频或其他非文本输入，其输出通常仍是文本响应。因此从强化学习训练的角度看，
+        它们仍可视为条件文本生成模型。与标准 LLM 的主要差别在于：其条件中除文本指令外还包含多模态信息。这些输入一经编码送入 LLM，
+        后续的策略建模、奖励建模与强化学习训练与第 3 节介绍的方法基本一致。
+      </p>
+      <p>
+        一个代表例子是多模态语言模型<sup>14</sup>，尤其是视觉语言模型（vision language model，VLM）。VLM 通常通过线性投影器或相关对齐模块，
+        把视觉编码器与 LLM 相连，使 LLM 具备视觉与语言理解能力。VLM 是当前多模态语言研究探索最多的扩展，也是 Qwen2.5-VL（Team, 2025）、
+        LLaMA-3.2-11B-Vision（Grattafori et al., 2024）等众多开源多模态语言模型的基础。对 VLM 而言，输入通常由一张或多张图像加一条文本指令构成，
+        记作 \((\mathbf{I},\mathbf{x})\)，其中 \(\mathbf{I}\) 表示输入图像。这些图像被编码为视觉表示后，与指令嵌入拼接，
+        或经交叉注意力机制融入 LLM。由于模型仍生成文本输出 \(\mathbf{y}\)，LLM 的强化学习训练过程只需很小的改动即可用于训练 VLM
+        （Yu et al., 2024a; Wang et al., 2025b; Zang et al., 2025; Ji et al., 2025）。
+      </p>
+      <p style="font-size:.85em;color:#5b6773;">
+        <sup>14</sup> 本文把多模态语言模型定义为：将 LLM 与 CLIP（Radford et al., 2021）等多模态编码器集成、
+        使 LLM 能处理图像等非文本输入的模型。近期也有工作用 LLM 生成非文本模态的输出，如图像与语音（Xu et al., 2025a; Zhang et al., 2024a）。
+        不过本节聚焦前一种定义。
+      </p>
+      <p>
+        尽管整体的强化学习表述可以复用，用强化学习训练 VLM 在实践中仍有挑战。核心困难不在策略优化算法本身，
+        而在高质量多模态偏好数据的稀缺。与文本偏好数据相比，视觉偏好数据收集更贵、验证更难、往往也更依赖具体任务。
+        这使得训练可靠的视觉奖励模型十分困难，而可靠的视觉奖励模型是把 RLHF 类方法应用于 VLM 的关键。
+      </p>
+      <p>
+        缓解这个问题的直接办法，是用 4.1.1 节介绍的自动偏好数据生成方法来生成视觉偏好数据（Yu et al., 2024b）。
+        另一条可选路线是多阶段训练视觉奖励模型，其动机是一个简单的想法：人类偏好已在文本中得到很好的刻画，可以跨模态迁移
+        （Wang et al., 2025b）。借助文本偏好数据，训练视觉奖励模型时对大规模视觉偏好数据的依赖随之降低。更具体地说，如图 33 所示，
+        可以按以下三个阶段训练视觉奖励模型：
+      </p>
+      <p>
+        • 阶段一：用大规模文本偏好数据做预训练。基于人类偏好跨模态的可迁移性，可先用大规模文本偏好数据预训练视觉奖励模型。
+        注意此阶段投影器参数保持冻结，不使用图像。
+      </p>
+      <figure class="float">
+        <img src="figs/p76-fig33.png" alt="图33：视觉奖励模型多阶段训练总览">
+        <figcaption>
+          <strong>图 33：</strong>视觉奖励模型多阶段训练方法总览。阶段一用文本偏好数据预训练；阶段二用基于图像描述（caption）的偏好数据微调，
+          弥合任务差距（bridging task gap）；阶段三用视觉偏好数据微调，弥合模态差距（bridging modality gap）。
+          （原图截取自英文原版 PDF 第 76 页）
+        </figcaption>
+      </figure>
+      <p>
+        这一阶段可视为给视觉奖励模型提供更强的起点：让模型先学到通用的人类偏好。
+      </p>
+      <p>
+        • 阶段二：用基于图像描述的偏好数据微调。由于同时存在任务差距（task gap）与模态差距（modality gap），预学到的人类偏好无法直接用于视觉任务。
+        为弥合任务差距，本阶段用基于图像描述的偏好数据微调奖励模型。其道理在于：通用文本偏好数据不覆盖视觉特定任务，
+        如“请描述这张图片的内容”。我们用这类数据微调模型，使其适配视觉特定任务；此阶段投影器参数保持冻结。
+      </p>
+      <p>
+        • 阶段三：用小规模视觉偏好数据微调。为进一步弥合模态差距，最后一阶段使用视觉偏好数据训练模型。注意这一阶段我们也会训练投影器参数。
+      </p>
+      <p>
+        在这一过程中，并非所有偏好数据都与后续阶段所用的偏好一致，可能造成偏好冲突。为解决该问题，可以通过数据选择技术增强视觉奖励模型，
+        例如 LESS（Xia et al., 2024）。事实上，偏好迁移已被证明在不同模态间有效，并且跨任务、跨语言同样有效
+        （Cheng et al., 2023; Wu et al., 2024）。更详细的讨论请读者参阅这些论文。
+      </p>
+      <p>
+        如 4.1.4 节讨论的，推理式奖励模型（reward reasoning models）在奖励预测上表现出众。一个自然的问题是：
+        <em>奖励推理能力能否从文本迁移到多模态场景？</em> Wang et al.（2026a）近期的工作提供了支持这一假设的实证证据：
+        遵循类似的多阶段训练范式，他们证明奖励推理能力确实可以有效跨模态迁移，进一步提升视觉奖励模型的性能。
+      </p>
+      <p>
+        除构造更好的偏好数据外，改进视觉奖励模型的另一条路是把额外的图像内容（如图像描述）整合进奖励预测（Sun et al., 2024b）。
+        这一思路旨在获得事实性更强的奖励预测、减少奖励投机。具体来说，原始设定中奖励模型只根据图像、输入与输出预测奖励，
+        即奖励模型的输入是 \([\mathbf{I},\mathbf{x},\mathbf{y}]\)；在事实增强的设定中，奖励模型还会收到一段额外的文本图像描述 \(\mathbf{C}\)，
+        输入变为 \([\mathbf{I},\mathbf{C},\mathbf{x},\mathbf{y}]\)。基本想法是：视觉奖励模型的主干仍是一个具有上下文学习能力的、训练良好的 LLM；
+        提供关于图像的额外事实上下文，能帮助奖励模型做出更准确、更有依据的奖励预测。
+      </p>
+      <p>
+        尽管本节的讨论主要在视觉语言模型的语境下聚焦视觉输入，这些强化学习技术同样适用于视频、音频等各种模态的输入。
+      </p>
+
+      <h2>7.2 多模态生成模型</h2>
+      <p>
+        与通常输出文本响应的多模态理解模型不同，多模态生成模型的目标是合成图像、视频等新内容。扩散模型与流匹配（flow matching）模型等
+        生成模型的近期进展，使高质量内容生成成为可能——通过学习复杂的数据分布实现。然而研究者发现，优化这类模型仍然棘手：
+        传统的最大似然或重构目标无法充分刻画人类高层次偏好，例如满足特定要求（物体数量、颜色、视觉布局）。为应对这一挑战，
+        已有工作引入强化学习，基于灵活的奖励信号直接优化多模态生成模型（Lee et al., 2023; Fan et al., 2023）。这样，模型不再只依赖
+        词元级或像素级的重构目标，而是能优化人类或自动评估器给出的任务特定标准。这一特性使强化学习特别适合多模态生成——
+        其生成质量往往难以用显式监督来刻画。
+      </p>
+      <p>
+        本小节描述强化学习在两类代表性多模态生成模型中的应用：扩散模型与流匹配模型。
+      </p>
+
+      <h3>7.2.1 扩散模型</h3>
+      <p>
+        我们先简要介绍基于扩散的模型的基本生成过程，给出必要的记号。扩散模型有很多方面（图像表示、数学形式化等），本文无法完全覆盖，
+        感兴趣读者可参阅已有的扩散模型综述了解更多细节（Yang et al., 2023; Croitoru et al., 2023）。
+      </p>
+      <p>
+        具体而言，扩散模型通过渐进去噪过程生成样本（Sohl-Dickstein et al., 2015）。给定干净样本 \(\mathbf{x}_0\)，前向扩散过程逐步向样本添加高斯噪声。
+        在时间步 \(t\)，转移分布定义为：
+      </p>
+      <div class="equation">\[ Q(\mathbf{x}_t\mid\mathbf{x}_{t-1})=\mathcal{N}(\mathbf{x}_t;\sqrt{1-\beta_t}\mathbf{x}_{t-1},\beta_t\mathbf{I}) \tag{82} \]</div>
+      <p>
+        其中 \(Q(\cdot)\) 表示预定义的前向扩散过程，\(\beta_t\) 控制时间步 \(t\) 的噪声幅度，\(\mathcal{N}(\mu,\sigma^2)\) 是均值为 \(\mu\)、
+        方差为 \(\sigma^2\) 的高斯分布。经过这一前向过程，原始数据分布被逐步转化为简单的高斯噪声分布。
+      </p>
+      <p>
+        生成过程执行反向去噪：神经网络学习从含噪输入恢复干净样本：
+      </p>
+      <div class="equation">\[ U_{\theta}(\mathbf{x}_{t-1}\mid\mathbf{x}_t)=\mathcal{N}(\mathbf{x}_{t-1};\mu_{\theta}(\mathbf{x}_t,t),\Sigma_{\theta}(\mathbf{x}_t,t)) \tag{83} \]</div>
+      <p>
+        其中 \(U_{\theta}(\cdot)\) 是用于生成的、学得的反向去噪过程，\(\mu_{\theta}(\cdot)\) 与 \(\Sigma_{\theta}(\cdot)\) 分别表示学得反向转移的均值与方差。
+        从时间步 \(T\) 到 0 迭代地施加去噪过程，扩散模型就能从随机噪声生成高质量样本。
+      </p>
+      <p>
+        训练期间，扩散模型主要关注恢复原始数据分布，这可视为监督学习目标。与 LLM 的 SFT 类似，这类训练范式把模型推向给定的训练数据，
+        却不显式考虑人类偏好。因此，扩散模型虽能生成高质量样本，仍可能满足不了细粒度的用户要求。例如 Lee et al.（2023）指出：
+        文生图扩散模型能生成视觉上逼真的图像，却常在特定属性上出错，比如生成指定数量的物体。因此，如何引入额外的学习目标，
+        让扩散模型与人类偏好更好对齐，已成为重要研究课题。
+      </p>
+      <p>
+        为解决这一挑战，研究者探索了用强化学习把扩散模型与人类偏好对齐。直接的做法是把生成的样本当作优化对象，用外部奖励信号引导生成过程。
+        具体地，给定文本提示 \(\mathbf{z}\)，奖励函数 \(R_{\mathrm{dm}}(\mathbf{x}_0,\mathbf{z})\) 评估生成的图像 \(\mathbf{x}_0\)，
+        扩散模型则被优化以最大化期望奖励：
+      </p>
+      <div class="equation">\[ \max_{\theta}\mathbb{E}_{\mathbf{z}\sim p(\mathbf{z}),\mathbf{x}_0\sim p_{\theta}(\mathbf{x}_0\mid\mathbf{z})}\big[R_{\mathrm{dm}}(\mathbf{x}_0,\mathbf{z})\big] \tag{84} \]</div>
+      <p>
+        这里，奖励函数可以根据优化目标由不同类型的评估器实例化。例如，可以用视觉语言模型度量生成图像与文本提示之间的语义对齐，
+        或用学得的奖励模型度量人类偏好。给定“桌上放三个红苹果”的提示，奖励函数可以判断生成图像是否含有正确的物体数量与颜色。
+      </p>
+      <p>
+        然而，直接用 3.1 节的强化学习表述优化该目标并不容易，因为扩散模型以迭代去噪过程生成样本，而非自回归生成。因此需要按扩散生成的特点
+        重新设计强化学习表述。以 DPOK（Fan et al., 2023）为例：近期研究注意到，反向扩散过程自然构成多步轨迹，每个去噪步骤都可看作
+        以当前含噪状态为条件的动作。基于这一观察，扩散生成过程可以形式化为 MDP。具体地，可把去噪过程视为多步 MDP，
+        应用基于策略梯度的强化学习算法来优化从生成图像获得的奖励。状态对应当前含噪的隐表示，动作表示下一步去噪：
+      </p>
+      <div class="equation">\[ s_t=(\mathbf{z},\mathbf{x}_{T-t}),\quad a_t=\mathbf{x}_{T-t-1} \tag{85} \]</div>
+      <p>策略定义为反向扩散转移：</p>
+      <div class="equation">\[ \mathrm{Pr}_{\theta}(a_t\mid s_t)=U_{\theta}(\mathbf{x}_{T-t-1}\mid\mathbf{x}_{T-t},\mathbf{z}) \tag{86} \]</div>
+      <p>
+        其中最终生成的图像从奖励模型获得奖励信号。基于这一表述，式 (84) 的优化目标可以用简单的策略梯度损失优化：
+      </p>
+      <div class="equation">\[ \mathcal{L}_{\mathrm{dmrl}}(\theta)=-\mathbb{E}_{\mathbf{z}\sim S_z,\tau_{\mathrm{dm}}\sim\mathrm{Pr}_{\theta}(\cdot)}\left[\sum_{t=0}^{T-1}\log U_{\theta}(\mathbf{x}_{T-t-1}\mid\mathbf{x}_{T-t},\mathbf{z})R_{\mathrm{dm}}(\mathbf{x}_0,\mathbf{z})\right] \tag{87} \]</div>
+      <p>
+        其中 \(S_z\) 是训练集，\(\tau_{\mathrm{dm}}\) 表示去噪轨迹 \(\{\mathbf{x}_T,\mathbf{x}_{T-1},\cdots,\mathbf{x}_0\}\)。这里，
+        许多为 LLM 对齐开发的强化学习技术可以自然迁移到扩散模型的优化：例如引入 KL 正则化（Fan et al., 2023）、
+        引入参考扩散模型做重要性采样（Black et al., 2024）、采用基于 GRPO 的优化（Xue et al., 2025）。
+      </p>
+
+      <h3>7.2.2 流匹配模型</h3>
+      <p>
+        与扩散模型不同，流匹配模型基于常微分方程（ordinary differential equations，ODEs）进行多模态生成：把数据变换建模为连续时间的流。
+        流匹配不再通过随机扩散过程逐步加噪去噪，而是学习一个连续向量场，把样本从简单先验分布输运到目标数据分布。
+        本小节先简要介绍流匹配模型的训练与生成过程，再讨论如何应用强化学习来优化它们。这里不展开流匹配模型的底层原理，
+        详细内容可参阅已有的流匹配教程（Xiao et al., 2026）。
+      </p>
+      <p>
+        设 \(\mathbf{x}_0\sim X_0\) 是来自目标分布的样本，\(\mathbf{x}_1\sim X_1\) 是来自先验分布的噪声样本。流匹配通过在数据与噪声之间插值构造中间状态：
+      </p>
+      <div class="equation">\[ \mathbf{x}_t=(1-t)\mathbf{x}_0+t\mathbf{x}_1 \tag{88} \]</div>
+      <p>
+        其中 \(t\in[0,1]\) 是连续时间变量。基于这一插值过程，流匹配训练神经网络预测描述样本如何沿轨迹移动的向量场：
+      </p>
+      <div class="equation">\[ \mathcal{L}_{\mathrm{fm}}(\theta)=\mathbb{E}_{t,\mathbf{x}_0\sim X_0,\mathbf{x}_1\sim X_1}\Big[\|\mathbf{v}_{\theta}(\mathbf{x}_t,t)-\mathbf{v}\|^2\Big] \tag{89} \]</div>
+      <p>
+        其中 \(\mathbf{v}=\mathbf{x}_1-\mathbf{x}_0\) 是目标向量场，\(\mathbf{v}_{\theta}(\mathbf{x}_t,t)\) 是学得的向量场函数。训练完成后，
+        生成过程从噪声样本 \(\mathbf{x}_1\) 出发，通过求解常微分方程遵循学得的连续流：
+      </p>
+      <div class="equation">\[ \frac{d\mathbf{x}_t}{dt}=\mathbf{v}_{\theta}(\mathbf{x}_t,t) \tag{90} \]</div>
+      <p>
+        虽然流匹配模型的连续生成过程也可以形式化为 MDP 以进行强化学习优化，这一表述有其独特困难。扩散模型天然支持随机采样，
+        因为生成过程本身就逐步引入高斯噪声；相比之下，流匹配模型通常通过确定性 ODE 生成样本：给定初始噪声后，各中间状态被唯一确定。
+        这种确定性给在线强化学习带来两重困难：策略梯度所需的转移概率难以计算，而且可供策略探索的随机性十分有限。
+      </p>
+      <p>
+        为使强化学习适用，Flow-GRPO 把原基于 ODE 的流匹配模型转换为等价的随机微分方程（SDE）：在保持边缘分布不变的前提下，
+        向生成过程注入随机性（Liu et al., 2025a）。转换后 SDE 的漂移函数可由原向量场构造：
+      </p>
+      <div class="equation">\[ \mathbf{v}^{d}_{\theta}(\mathbf{x}_t,t,\mathbf{z})=\mathbf{v}_{\theta}(\mathbf{x}_t,t,\mathbf{z})+\frac{\sigma_t^2}{2t}\left[\mathbf{x}_t+(1-t)\mathbf{v}_{\theta}(\mathbf{x}_t,t,\mathbf{z})\right] \tag{91} \]</div>
+      <p>
+        其中 \(\mathbf{v}_{\theta}(\cdot)\) 为原始向量场，\(\mathbf{v}^{d}_{\theta}(\cdot)\) 为 ODE 转 SDE 后的漂移函数。于是随机生成过程可写为：
+      </p>
+      <div class="equation">\[ d\mathbf{x}_t=\mathbf{v}^{d}_{\theta}(\mathbf{x}_t,t,\mathbf{z})\,dt+\sigma_t\,d\mathbf{w} \tag{92} \]</div>
+      <p>
+        其中 \(d\mathbf{w}\) 表示维纳过程（Wiener process）增量，即沿连续采样路径添加的无穷小高斯噪声。
+      </p>
+      <p>
+        实践中，我们对上述 SDE 做离散化以采样轨迹。使用 Euler–Maruyama 离散化，每一步采样可写为：
+      </p>
+      <div class="equation">\[ \mathbf{x}_{t+\Delta t}=\mathbf{x}_t+\mathbf{v}^{d}_{\theta}(\mathbf{x}_t,t,\mathbf{z})\Delta t+\sigma_t\sqrt{\Delta t}\,\boldsymbol{\epsilon}\sim\mathcal{N}(\mathbf{0},\mathbf{I}) \tag{93} \]</div>
+      <p>
+        最后一项向每个生成步骤注入随机性，使模型能从同一条件采样出多样的轨迹，为在线强化学习提供有效探索。离散化后，每个生成步骤对应
+        一个随机高斯转移，从而可以计算 GRPO 所需的转移概率。
+      </p>
+      <p>
+        具体地，通过离散化连续流轨迹，可以把生成过程看作一串决策步骤：模型决定如何把当前状态向目标数据分布转化（Liu et al., 2025a）。
+        在该表述下，状态、动作、转移、初始状态分布与奖励函数定义如下。时间步 \(t\) 的状态定义为：
+      </p>
+      <div class="equation">\[ s_t=(\mathbf{z},t,\mathbf{x}_t) \tag{94} \]</div>
+      <p>动作对应流模型预测的下一状态：</p>
+      <div class="equation">\[ a_t=\mathbf{x}_{t-\Delta t} \tag{95} \]</div>
+      <p>由于流模型确定性地预测向量场，策略可以表示为：</p>
+      <div class="equation">\[ \mathrm{Pr}_{\theta}(a_t\mid s_t)=\delta\big(a_t-(\mathbf{x}_t-\Delta t\,\mathbf{v}_{\theta}(\mathbf{x}_t,t,\mathbf{z}))\big) \tag{96} \]</div>
+      <p>
+        其中 \(\delta(\cdot)\) 是狄拉克 δ 分布，表示下一状态由当前状态与学得的向量场唯一确定。经过上述 ODE 转 SDE 与离散化后，
+        转移概率变为：
+      </p>
+      <div class="equation">\[ \mathrm{Pr}_{\theta}(a_t\mid s_t)=\mathcal{N}\big(a_t;\mu_{\theta}(\mathbf{x}_t,t,\mathbf{z}),\sigma_t^2\mathbf{I}\big) \tag{97} \]</div>
+      <p>
+        其中 \(\mu_{\theta}(\cdot)\) 由学得的向量场决定，\(\sigma_t\) 控制采样期间的随机性。基于这一随机 MDP 表述，强化学习算法即可用于优化流匹配模型。
+        以 GRPO 为例：给定文本条件 \(\mathbf{z}\)，流模型采样一组生成轨迹 \(\{\tau_{\mathrm{fm}}^i\}_{i=1}^{G}\)，每条轨迹表示从初始噪声到最终生成样本的完整采样过程。
+        我们用奖励函数评估每条轨迹的最终生成样本，得到一组奖励
+        \(\mathbf{R}_{\mathrm{fm}}=\{R_{\mathrm{fm}}(\mathbf{x}_0^1,\mathbf{z}),R_{\mathrm{fm}}(\mathbf{x}_0^2,\mathbf{z}),\cdots,R_{\mathrm{fm}}(\mathbf{x}_0^G,\mathbf{z})\}\)，
+        其中 \(R_{\mathrm{fm}}\) 是评估生成样本的奖励函数。与扩散模型一样，奖励函数可以按优化目标由不同类型的评估器实例化，
+        例如用视觉语言模型度量图文对齐。每条轨迹的优势基于其在采样组内的相对奖励估计：
+      </p>
+      <div class="equation">\[ \hat{A}_i=\frac{R_{\mathrm{fm}}(\mathbf{x}_0^i,\mathbf{z})-\mathrm{mean}(\mathbf{R}_{\mathrm{fm}})}{\mathrm{std}(\mathbf{R}_{\mathrm{fm}})} \tag{98} \]</div>
+      <p>基于这些估计的优势，GRPO 目标表述如下：</p>
+      <div class="equation">\[ \mathcal{L}_{\mathrm{fmgrpo}}(\theta)=-\mathbb{E}_{\mathbf{z}\sim S_z,\tau_{\mathrm{fm}}\sim\mathrm{Pr}(\cdot)}\frac{1}{G}\sum_{i=1}^{G}\left[\frac{1}{T}\sum_{t}\min\Big(\frac{\mathrm{Pr}_{\theta}(a_t^i\mid s_t^i)}{\mathrm{Pr}_{\theta_{\mathrm{old}}}(a_t^i\mid s_t^i)}\hat{A}_i,\mathrm{clip}\Big(\frac{\mathrm{Pr}_{\theta}(a_t^i\mid s_t^i)}{\mathrm{Pr}_{\theta_{\mathrm{old}}}(a_t^i\mid s_t^i)},1-\epsilon,1+\epsilon\Big)\hat{A}_i\Big)\right] \tag{99} \]</div>
+      <p class="pagebreak-note">［第 7 章完，对应原书页 74–80。］</p>
+
+      <nav class="chapter-nav">
+        <a href="ch06.html">← 上一章：面向 LLM 智能体的强化学习</a>
+        <a href="ch08.html">下一章：结论与未来方向 →</a>
+      </nav>
     </div>
   </body>
 </html>
