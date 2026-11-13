@@ -592,6 +592,162 @@
         然而，一条记忆的用处未必立刻显现（Xu et al., 2025b）。例如某次交互收集到的失败案例可能不会改进当前回答，
         却能在未来任务中帮助智能体避开类似错误。这说明记忆可以成为智能体学习的重要组成部分，而不仅仅是存储过去的信息。
       </p>
+      <p>
+        除优化记忆更新操作外，另一个重要问题是如何从积累的经验中构造并组织记忆。可以把记忆构造看作可学习的策略，
+        而不再是一个固定的预处理步骤，让智能体通过强化学习学到有效的记忆构造方法。这样就能把记忆构造表述为序贯决策过程：
+        智能体学习如何选择、组织、转化交互经验，形成有用的记忆（Wang et al., 2025d）。
+      </p>
+
+      <h3>6.4.2 技能优化</h3>
+      <p>
+        技能是对智能体经验的更高层抽象。与记忆聚焦存储过往交互中提取的有用信息不同，技能旨在总结跨多次经验出现的共性模式，
+        并把它们转化为可复用的能力。具体地说，技能可看作一个结构化的指令包，说明何时应调用该技能、应遵循什么工作流、需要哪些工具、
+        最终结果如何验证。例如，一个面向推理的技能可以表示为：
+      </p>
+      <div class="promptbox">
+        <strong>Name:</strong> Math-Logic-Reasoning<br>
+        <em>Description:</em> Solve complex mathematical, logical, tabular, and constraint reasoning tasks. Use when a task requires
+        multi-step arithmetic, symbolic reasoning, calculator-backed verification, table analysis, optimization, scheduling or allocation
+        constraints, Pareto trade-offs, proof checking, or translating word problems into equations, code, formulas, or executable checks.
+        （处理复杂数学、逻辑、表格与约束推理任务：多步算术、符号推理、计算器验证、表格分析、优化、调度/分配约束、帕累托权衡、证明检查，
+        或把应用题转化为方程、代码、公式与可执行检查时使用。）<br><br>
+        <span style="text-decoration:underline;">Math Logic Reasoning</span><br>
+        Use this skill for reasoning tasks where a wrong intermediate assumption can silently break the final answer. Prefer a compact
+        formal model plus executable verification over unsupported mental arithmetic.<br>
+        <span style="text-decoration:underline;">Workflow</span><br>
+        1. Restate the target quantity, decision, or claim.<br>
+        2. Extract givens, units, constraints, and hidden assumptions.<br>
+        3. Convert the problem into equations, probabilities, inequalities, tables, spreadsheet formulas, graphs, search spaces,
+        constraint satisfaction problems, or short verification scripts.<br>
+        …<br>
+        <span style="text-decoration:underline;">Tool Choices</span><br>
+        1. Use Python as a calculator for multi-step arithmetic, combinatorics, simulations, optimization search, or exact rational checks.<br>
+        2. Use Fraction, Decimal, or sympy when exactness matters.<br>
+        3. Use pandas for complex tables, joins, grouped summaries, rankings, or data-cleaning logic.<br>
+        …<br>
+        <span style="text-decoration:underline;">Verification Checklist</span><br>
+        1. Recalculate the final numeric answer using a second method when feasible.<br>
+        2. Test boundary cases: zero, negative values, equality limits, duplicate entries, and empty sets.<br>
+        3. Confirm units after every transformation.<br>
+        …<br>
+        <span style="text-decoration:underline;">Output Style</span><br>
+        Give the answer first when possible. Then include a concise derivation, the checked constraints, and any caveats.
+      </div>
+      <p>
+        实践中，提示里会给出所有可用技能的描述，智能体学习根据当前任务选择合适的技能。被选中的技能充当高层行为模板，
+        被选中的技能充当高层行为模板，引导智能体的规划与执行过程。例如：
+      </p>
+      <div class="promptbox">
+        <strong>Available Skills:</strong>（可用技能）<br>
+        Skill 1: Web Search<br>
+        This skill enables the agent to retrieve and synthesize external information when the task requires up-to-date or
+        domain-specific knowledge …（任务需要最新或领域特定知识时，检索并综合外部信息）<br>
+        <span style="text-decoration:underline;">Skill 2: Math-Logic-Reasoning</span><br>
+        Solve complex mathematical, logical, tabular, and constraint reasoning …（处理复杂数学、逻辑、表格与约束推理……）<br>
+        {More skill descriptions}<br>
+        <strong>User Query:</strong> Solve the equation <em>2x+5=13</em>.（解方程 2x+5=13。）<br>
+        <strong>Selected Skill:</strong> <span style="background:#c9f2c9;">Math-Logic-Reasoning</span>（选中技能：Math-Logic-Reasoning）
+      </div>
+      <p>
+        为智能体构造技能的一种直接做法，是按具体任务需求人工撰写。但同一任务的技能可以有很多不同的设计方式，类似于给 LLM 写提示词：
+        有人会给出一份带详细指令、明确工作流与执行过程的技能；另一份可能只给高层指导，让智能体自己决定细化的执行策略。
+        这类技能设计上的差异会显著影响智能体表现（Yu et al., 2026b）。
+      </p>
+      <p>
+        人工构造技能的一个局限，是其质量与多样性很大程度依赖人类经验。因此，若要 LLM 处理广泛的任务，依赖人工标注数据做 LLM 微调往往效率很低。
+        为突破这一局限，一条替代路线是从智能体经验中自动生成技能。例如，可以提示 LLM 总结成功轨迹、抽取可复用的技能；
+        这些生成的技能可加入智能体的技能库，供未来任务复用。
+      </p>
+      <p>
+        上述生成技能的方式常有质量问题。第一，通用 LLM 并不天然知道如何设计有效的技能，不做额外优化尤其如此。第二，技能生成器可能优化错了目标：
+        技能生成与技能利用发生在不同语境——LLM 可能因为生成的技能满足提示中给定的指令就认为它有效，但另一个智能体未必能在真实任务中用好它。
+        因此技能生成不能只追求产出结构良好的技能，还要考虑这些技能能否真正提升任务执行中的表现。近期工作转向用强化学习实现这一目标：
+        依据生成技能的实际表现来优化技能生成。
+      </p>
+      <p>
+        这里以 SkillRL 为例，说明如何通过强化学习优化技能生成（Xia et al., 2026）。其思想是：不直接从存储的轨迹中生成技能，
+        而是先从既有轨迹抽象出可复用技能，用它们引导智能体强化学习训练。训练过程中，智能体持续发现新技能并更新技能库，
+        实现智能体与其技能的共同演化。图 32 给出了 SkillRL 的示意，这里概述其中的关键步骤。
+      </p>
+      <p>
+        • 最初，我们从环境收集交互轨迹。这些轨迹既包含成功经验，也包含失败经验，为技能的发现与优化提供多样信号：
+        成功轨迹揭示有效行为，失败轨迹帮助识别潜在弱点与改进机会。
+      </p>
+      <p>
+        • 随后用收集到的轨迹抽取可复用技能，初始化技能库。考虑到智能体能力通常兼顾通用解题策略与任务特定流程，
+        可以按不同抽象层级组织技能：具体可构建分层技能库——通用技能库存储跨任务可迁移的技能以提升泛化，
+      <figure class="float">
+        <img src="figs/p72-fig32.png" alt="图32：SkillRL 示意">
+        <figcaption>
+          <strong>图 32：</strong>SkillRL 示意（Xia et al., 2026）。SkillRL 维护一池智能体轨迹，先从中抽象出可复用技能，再用这些技能引导强化学习训练。
+          随着智能体通过强化学习不断进步，它会生成更高质量的轨迹，这些轨迹又被用于进一步精炼技能库。
+          （原图截取自英文原版 PDF 第 72 页）
+        </figcaption>
+      </figure>
+      <p>
+        • 技能库初始化后，智能体检索相关技能来引导强化学习训练过程。具体地，给定任务 \(x\)，智能体从技能库 \(\mathcal{S}\) 中挑选合适的技能：
+      </p>
+      <div class="equation">\[ \mathcal{S}^{*}=\mathrm{TopK}_{s_i\in\mathcal{S}}\mathrm{Score}(x,s_i) \tag{81} \]</div>
+      <p>
+        其中 \(\mathrm{Score}(x,s_i)\) 衡量当前任务与各技能的相关程度，\(\mathcal{S}^{*}\) 为选中的技能集合。这些技能随后被并入智能体的决策过程、
+        用于引导强化学习优化：它们提供任务分解、执行工作流等高层行为先验，帮助智能体探索更有效的行为、提升强化学习训练效率。
+      </p>
+      <p>
+        • 通过与环境交互，智能体收集新的轨迹。这些轨迹会被进一步分析，用于发现新技能或精炼已有技能。这样，技能库便与智能体策略共同演化：
+        技能库提供先验知识以加速强化学习训练，改进后的轨迹又持续丰富和精炼技能库。
+      </p>
+      <p>
+        重复上述过程，智能体能借助不断积累的经验改进其技能库：新收集的轨迹为发现新技能或精炼已有技能提供更多证据，
+        更新后的技能库又进一步指导后续强化学习训练。这就形成了一个智能体与其技能随时间共同演化的迭代学习过程。从这一视角看，
+        技能优化提供了一条把低层交互经验转化为可复用能力的可行路径，并有望成为让智能体持续从自身经验中学习的重要方法
+        （Wang et al., 2026f; Fu et al., 2026）。
+      </p>
+
+      <h3>6.4.3 轨迹精炼</h3>
+      <p>
+        与聚焦存储和抽象经验的记忆管理、技能优化不同，轨迹精炼通过修订已生成的轨迹直接改进智能体行为。这一思想的来源是 LLM 的自我精炼能力。
+        如 5.1 节讨论的，推理增强的强化学习训练使 LLM 能够评估自己的中间推理过程并修正错误解法。例如解数学题时，
+        LLM 可以在每个推理步骤后借助验证中间结果、依据验证结果调整自己的求解轨迹。
+      </p>
+      <p>
+        自然的延伸是把这种自我精炼能力应用到基于 LLM 的智能体上。与外部环境交互时，智能体会持续收到外部反馈，如工具执行结果或环境状态。
+        智能体不必一味遵循最初的轨迹，而是可以利用这些反馈信号识别错误、修订先前的决策、生成改进后的轨迹。这样，智能体就能通过持续精炼自身行为，
+        从自己的交互经验中学习。常用的轨迹精炼方法是 Reflexion（Shinn et al., 2023）：基本思想是把显式的反思过程引入智能体执行。
+        给定任务后，智能体先生成初始轨迹并从评估器获得反馈；随后分析反馈、总结潜在错误或改进策略，生成一段反思。
+        在此基础上，智能体在后续尝试中产生改进后的轨迹。这里以数学推理为例。
+      </p>
+      <div class="promptbox">
+        <strong>Task:</strong> Solve the equation \(3x+7=22\).（解方程 3x+7=22。）<br>
+        <span style="background:#c9f2c9;font-weight:bold;">Initial Trajectory:</span>（初始轨迹）<br>
+        <strong>Thought:</strong> I need to isolate \(x\) by moving the constant term to the other side.（要把常数项移到另一边以解出 x。）<br>
+        <strong>Action:</strong> Subtract 7 from both sides:（两边减 7：）
+        \[ 3x+7-7=22-7 \]
+        <strong>Observation:</strong> The equation becomes:（方程变为：）
+        \[ 3x=15 \]
+        <strong>Thought:</strong> I need to divide both sides by 3 to obtain \(x\).（两边除以 3 得到 x。）<br>
+        <strong>Action:</strong> Calculate:（计算：）
+        \[ x=\frac{15}{3}=4 \]
+        <strong>Answer:</strong> \(x=4\)。<br>
+        <strong>Feedback:</strong> The answer is incorrect. This is because \(\frac{15}{3}=5\neq 4\).（答案错误：15/3=5≠4。）<br>
+        <strong>Reflection:</strong> <u>The previous trajectory failed because I made an error during intermediate calculation.
+        For future tasks, I should carefully verify arithmetic operations and check the final answer by substituting it back into
+        the original equation.</u>（上一轨迹因中间计算出错而失败。今后应仔细核对算术运算，并把最终答案代回原方程检验。）<br>
+        <span style="background:#c9f2c9;font-weight:bold;">Refined Trajectory:</span>（精炼后的轨迹）<br>
+        <strong>Thought:</strong> I need to isolate \(x\) and verify the final solution.（解出 x 并验证最终解。）<br>
+        <strong>Action:</strong> Subtract 7 from both sides:（两边减 7：）
+        \[ 3x=22-7=15 \]
+        <strong>Action:</strong> Divide both sides by 3:（两边除以 3：）
+        \[ x=\frac{15}{3}=5 \]
+        <strong>Observation:</strong> Verify the solution:（验证解：）
+        \[ 3\times 5+7=22 \]
+        <strong>Answer:</strong> \(x=5\)。
+      </div>
+      <p class="pagebreak-note">［第 6 章完，对应原书页 57–73。］</p>
+
+      <nav class="chapter-nav">
+        <a href="ch05.html">← 上一章：面向 LLM 推理的强化学习</a>
+        <a href="ch07.html">下一章：面向 LLM 对齐的多智能体强化学习 →</a>
+      </nav>
     </div>
   </body>
 </html>
