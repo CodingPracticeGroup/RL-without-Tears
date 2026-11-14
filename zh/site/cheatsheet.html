@@ -1,0 +1,647 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>公式速查表 - RL without Tears（中文版）</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon/favicon-32.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="assets/favicon/apple-touch-icon.png">
+    <link rel="stylesheet" href="styles.css?v=20261113">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+    <script defer src="math.js"></script>
+    <style>
+      .zh-banner { background:#eef4fa; border-bottom:1px solid #cfe0ef; color:#2f5d8a; font-size:.85rem; padding:8px 24px; text-align:center; }
+      .zh-banner a { color:#2f5d8a; }
+    </style>
+  </head>
+  <body>
+    <div class="zh-banner">
+      本页为中文翻译版（AI 辅助翻译，非官方译本） ·
+      <a href="../../index.html">返回中文目录</a> ·
+      <a href="https://niutrans.github.io/RL-without-Tears/cheatsheet.html">英文原版</a>
+    </div>
+    <header class="topbar">
+      <a class="brand" href="index.html">RL without Tears（中文版）</a>
+      <nav class="topnav" aria-label="主导航">
+        <a href="reader.html">在线读本</a>
+        <a href="cheatsheet.html">公式速查</a>
+        <a href="glossary.html">术语表</a>
+        <a href="index.html#cite">引用</a>
+      </nav>
+    </header>
+
+    <main class="layout">
+      <aside class="sidebar" aria-label="速查表导航">
+        <nav>
+          <a href="#lm-factorization">语言建模</a>
+          <a href="#pretraining">预训练</a>
+          <a href="#prompting">提示</a>
+          <a href="#sft">SFT</a>
+          <a href="#inference">推理解码</a>
+          <a href="#llm-policy">LLM 即策略</a>
+          <a href="#mdp">MDP 目标</a>
+          <a href="#policy-gradient">策略梯度</a>
+          <a href="#value-return">价值 / 回报</a>
+          <a href="#advantage">优势</a>
+          <a href="#gae">GAE</a>
+          <a href="#importance">重要性采样</a>
+          <a href="#kl">KL 惩罚</a>
+          <a href="#ppo">PPO</a>
+          <a href="#reward-model">奖励模型</a>
+          <a href="#reward-shaping">奖励塑形</a>
+          <a href="#grpo">GRPO</a>
+          <a href="#dpo">DPO</a>
+          <a href="#mcts">MCTS</a>
+          <a href="#agent-rl">智能体强化学习</a>
+          <a href="#multimodal">多模态强化学习</a>
+        </nav>
+      </aside>
+
+      <article class="content reader-content">
+        <section class="reader-title">
+          <p class="kicker">配套材料</p>
+          <h1>RL 公式速查表</h1>
+          <p>
+            这里汇总教程主线中出现的公式，便于查阅：LLM 下一词元建模、LLM 即策略的映射、策略梯度更新、方差缩减、
+            PPO 风格的 RLHF、奖励建模、直接偏好学习，以及面向推理、智能体与多模态生成的扩展。
+            建议在读完对应章节之后用它快速检索；完整推导仍以论文为准。
+          </p>
+        </section>
+
+        <section class="cheat-item" id="lm-factorization">
+          <p class="chapter-number">LLM 基础</p>
+          <h2>语言建模</h2>
+          <div class="equation">
+            \[
+              \mathrm{Pr}_{\theta}(\mathbf{z})
+              =
+              \prod_{i=1}^{N}\mathrm{Pr}_{\theta}(z_i\mid\mathbf{z}_{&lt;i}),
+              \qquad
+              \log \mathrm{Pr}_{\theta}(\mathbf{z})
+              =
+              \sum_{i=1}^{N}\log \mathrm{Pr}_{\theta}(z_i\mid\mathbf{z}_{&lt;i})
+            \]
+          </div>
+          <p class="notation-note">
+            其中 \(\mathbf{z}=z_1,\ldots,z_N\) 是词元序列，\(\mathbf{z}_{&lt;i}=z_1,\ldots,z_{i-1}\)。
+            这种从左到右的下一词元视角，是训练、提示、推理与强化学习优化共用的接口。
+          </p>
+        </section>
+
+        <section class="cheat-item" id="pretraining">
+          <p class="chapter-number">LLM 基础</p>
+          <h2>预训练目标</h2>
+          <div class="equation">
+            \[
+              \hat{\theta}
+              =
+              \arg\max_{\theta}
+              \sum_{\mathbf{z}\in\mathcal{S}_{\mathrm{pre}}}
+              \sum_{i=1}^{N}
+              \log \mathrm{Pr}_{\theta}(z_i\mid\mathbf{z}_{&lt;i})
+            \]
+          </div>
+          <p class="notation-note">
+            \(\mathcal{S}_{\mathrm{pre}}\) 是预训练语料，\(\hat{\theta}\) 表示优化后的预训练参数。
+          </p>
+          <p>
+            预训练从无标注文本中学习通用的语言建模能力。后续阶段再把这一基座模型向遵循指令与追求奖励的行为方向进行适配。
+          </p>
+        </section>
+
+        <section class="cheat-item" id="prompting">
+          <p class="chapter-number">条件生成</p>
+          <h2>提示（Prompting）</h2>
+          <p>
+            提示通过改变生成所用的上下文来适配 LLM，而不更新模型参数。提示可以包含指令、用户提供的内容、输出要求或示范示例。
+          </p>
+          <p>
+            提示质量会强烈影响模型表现。意图几乎相同的提示也可能产生不同输出，因此提示常通过反复试验或自动提示搜索来打磨。
+          </p>
+        </section>
+
+        <section class="cheat-item" id="sft">
+          <p class="chapter-number">基线</p>
+          <h2>监督微调（SFT）</h2>
+          <div class="equation">
+            \[
+              \tilde{\theta}
+              =
+              \arg\max_{\hat{\theta}^{+}}
+              \sum_{(\mathbf{x},\mathbf{y})\in\mathcal{S}}
+              \log \mathrm{Pr}_{\hat{\theta}^{+}}(\mathbf{y}\mid\mathbf{x})
+            \]
+          </div>
+          <div class="equation">
+            \[
+              \log \mathrm{Pr}_{\theta}(\mathbf{y}\mid \mathbf{x})
+              =
+              \sum_{t=1}^{T}\log \mathrm{Pr}_{\theta}(y_t\mid \mathbf{x},\mathbf{y}_{&lt;t})
+            \]
+          </div>
+          <p class="notation-note">
+            其中 \(\mathbf{x}\) 是输入序列，\(\mathbf{y}=y_1,\ldots,y_T\) 是目标输出序列，
+            \(y_t\) 由输入与之前的目标词元预测。
+          </p>
+          <p>
+            SFT 最大化示范输出的似然。它在偏好学习或强化学习优化之前提供初始策略。
+          </p>
+        </section>
+
+        <section class="cheat-item" id="inference">
+          <p class="chapter-number">自回归生成</p>
+          <h2>常见解码规则</h2>
+          <p class="derivation-label">贪心解码</p>
+          <div class="equation">
+            \[
+              y_t^{\mathrm{greedy}}
+              =
+              \arg\max_{w\in\mathcal{V}}
+              \mathrm{Pr}_{\theta}(w\mid\mathbf{x},\mathbf{y}_{&lt;t})
+            \]
+          </div>
+          <p class="derivation-label">束搜索</p>
+          <div class="equation">
+            \[
+              s(\mathbf{y}_{\leq t})
+              =
+              s(\mathbf{y}_{&lt;t})
+              +
+              \log \mathrm{Pr}_{\theta}(y_t\mid\mathbf{x},\mathbf{y}_{&lt;t})
+            \]
+          </div>
+          <div class="equation">
+            \[
+              \mathcal{B}_t
+              =
+              \operatorname{TopB}
+              \left\{
+                (\mathbf{y}_{&lt;t},w):
+                \mathbf{y}_{&lt;t}\in\mathcal{B}_{t-1},
+                w\in\mathcal{V}
+              \right\}
+            \]
+          </div>
+          <p class="derivation-label">采样</p>
+          <div class="equation">
+            \[
+              y_t
+              \sim
+              \mathrm{Pr}_{\theta}(\cdot\mid\mathbf{x},\mathbf{y}_{&lt;t}),
+              \qquad
+              \mathrm{Pr}_{\theta}^{(T)}(w\mid\mathbf{x},\mathbf{y}_{&lt;t})
+              =
+              \frac{\exp(l_w/T)}{\sum_{v\in\mathcal{V}}\exp(l_v/T)}
+            \]
+          </div>
+          <p class="notation-note">
+            贪心解码取概率最高的词元。束搜索按累计序列分数保留得分最高的 \(B\) 个候选前缀。
+            采样则从下一词元分布中抽取，常配合温度 \(T\)、top-\(k\) 或 top-\(p\) 过滤进行调整。
+          </p>
+          <p>
+            采样对强化学习格外重要，因为它对应随机策略采样，能产生可被奖励打分的轨迹。
+          </p>
+        </section>
+
+        <section class="cheat-item" id="llm-policy">
+          <p class="chapter-number">LLM-RL 映射</p>
+          <h2>LLM 即策略</h2>
+          <div class="equation">
+            \[
+              \pi_{\theta}(a_t\mid s_t)
+              =
+              \mathrm{Pr}_{\theta}(y_t\mid\mathbf{x},\mathbf{y}_{&lt;t}),
+              \qquad
+              a_t=y_t,\quad s_t=(\mathbf{x},\mathbf{y}_{&lt;t})
+            \]
+          </div>
+          <p class="notation-note">
+            这里 \(s_t\) 是提示加上已生成前缀，\(a_t\) 是 LLM 选择的下一词元动作。
+          </p>
+          <p>
+            这是词元生成与强化学习之间的桥梁：策略在提示与已生成前缀的条件下选择下一个词元。
+          </p>
+        </section>
+
+        <section class="cheat-item" id="mdp">
+          <p class="chapter-number">RL 基础</p>
+          <h2>MDP 策略目标</h2>
+          <div class="equation">
+            \[
+              \pi^{*}
+              =
+              \arg\max_{\pi}
+              \mathbb{E}
+              \left[
+                \sum_{t=0}^{H-1}r_t
+                \mid \pi
+              \right]
+            \]
+          </div>
+          <p class="notation-note">
+            轨迹为 \(\tau=(s_0,a_0,s_1,a_1,\ldots,s_{H-1},a_{H-1})\)，\(H\) 是轨迹长度。
+          </p>
+          <p>
+            在 LLM 强化学习中，轨迹可以是一次补全、一条推理轨迹、一段工具调用交互，或一条多模态生成路径。
+          </p>
+        </section>
+
+        <section class="cheat-item" id="policy-gradient">
+          <p class="chapter-number">策略优化</p>
+          <h2>策略梯度</h2>
+          <div class="equation">
+            \[
+              \nabla J(\theta)
+              =
+              \mathbb{E}_{\tau\sim \pi_{\theta}}
+              \left[
+                R(\tau)\nabla_{\theta}\log \pi_{\theta}(\tau)
+              \right]
+            \]
+          </div>
+          <p class="notation-note">
+            这里 \(J(\theta)\) 是策略目标，\(\tau\) 是采样的轨迹，\(R(\tau)\) 是其累计奖励。
+          </p>
+          <div class="derivation compact-derivation">
+            <p class="derivation-label">论文中的 LLM 形式</p>
+            <div class="equation">
+              \[
+                \begin{aligned}
+                  \frac{\partial J(\theta)}{\partial\theta}
+                  &=
+                  \mathbb{E}_{\mathbf{x}\sim\mathcal{S}_{x}}
+                  \left[
+                    \frac{1}{d}
+                    \sum_{\mathbf{y}\in\mathcal{D}}
+                    \frac{\partial \log\mathrm{Pr}_{\theta}(\mathbf{y}\mid\mathbf{x})}{\partial\theta}
+                    R(\mathbf{y})
+                  \right] \\
+                  \frac{\partial J(\theta)}{\partial\theta}
+                  &=
+                  \mathbb{E}_{\mathbf{x}\sim\mathcal{S}_{x}}
+                  \left[
+                    \frac{1}{d}
+                    \sum_{\mathbf{y}\in\mathcal{D}}
+                    \sum_{t=1}^{T}
+                    \frac{\partial \log \mathrm{Pr}_{\theta}(y_t\mid\mathbf{x},\mathbf{y}_{&lt;t})}{\partial\theta}
+                    \sum_{k=t}^{T}r_k
+                  \right]
+                \end{aligned}
+              \]
+            </div>
+          </div>
+          <p>
+            提高获得高奖励的采样轨迹的概率。奖励不需要可微。
+          </p>
+        </section>
+
+        <section class="cheat-item" id="value-return">
+          <p class="chapter-number">期望未来奖励</p>
+          <h2>价值与折扣回报</h2>
+          <div class="equation">
+            \[
+              V(s)=
+              \mathbb{E}\left[
+                \sum_{t=0}^{\infty}\gamma^t r_t
+                \mid s_0=s,\pi
+              \right]
+            \]
+          </div>
+          <p class="notation-note">
+            这里 \(V(s)\) 是从状态 \(s\) 出发的期望折扣回报，\(r_t\) 是时间步 \(t\) 的奖励，\(\gamma\) 是折扣因子。
+          </p>
+          <p>
+            价值函数估计某策略下的未来回报。折扣因子控制未来奖励相对近期奖励的权重。
+          </p>
+        </section>
+
+        <section class="cheat-item" id="advantage">
+          <p class="chapter-number">方差缩减</p>
+          <h2>价值与优势</h2>
+          <div class="equation">
+            \[
+              A(s,a)=Q(s,a)-V(s)
+            \]
+          </div>
+          <p class="notation-note">
+            这里 \(Q(s,a)\) 是在状态 \(s\) 采取动作 \(a\) 后的期望回报，\(V(s)\) 是该状态的基线期望回报。
+          </p>
+          <p>
+            优势衡量某个动作是否优于同一状态下的期望行为，用于降低奖励加权更新的方差。
+          </p>
+        </section>
+
+        <section class="cheat-item" id="gae">
+          <p class="chapter-number">偏差-方差权衡</p>
+          <h2>广义优势估计（GAE）</h2>
+          <div class="equation">
+            \[
+              \delta_t=r_t+\gamma V_{t+1}-V_t,\qquad
+              A_t^{\mathrm{GAE}}=\delta_t+\gamma\lambda A_{t+1}^{\mathrm{GAE}}
+            \]
+          </div>
+          <p class="notation-note">
+            这里 \(\delta_t\) 是时序差分残差，\(V_t\) 是时间步 \(t\) 的价值估计，\(\lambda\) 控制 GAE 的偏差-方差权衡。
+          </p>
+          <p>
+            GAE 递归地混合未来各步的时序差分信号，是高噪声蒙特卡洛回报与有偏单步估计之间的实用折中。
+          </p>
+        </section>
+
+        <section class="cheat-item" id="importance">
+          <p class="chapter-number">异策略校正</p>
+          <h2>重要性采样比</h2>
+          <div class="equation">
+            \[
+              \rho_t(\theta)=
+              \frac{\pi_{\theta}(a_t\mid s_t)}
+                   {\pi_{\theta_{\mathrm{old}}}(a_t\mid s_t)}
+            \]
+          </div>
+          <p class="notation-note">
+            这里 \(\pi_{\theta}\) 是当前策略，\(\pi_{\theta_{\mathrm{old}}}\) 是产生采样动作 \(a_t\) 的旧策略。
+          </p>
+          <p>
+            该比值用于校正“产生样本的策略”与“当前正在优化的策略”之间的不匹配。
+          </p>
+        </section>
+
+        <section class="cheat-item" id="kl">
+          <p class="chapter-number">策略漂移控制</p>
+          <h2>KL 惩罚</h2>
+          <div class="equation">
+            \[
+              \mathrm{Penalty}_t
+              =
+              \log \mathrm{Pr}_{\theta}(y_t\mid \mathbf{x},\mathbf{y}_{&lt;t})
+              -
+              \log \mathrm{Pr}_{\theta_{\mathrm{ref}}}(y_t\mid \mathbf{x},\mathbf{y}_{&lt;t})
+            \]
+          </div>
+          <p class="notation-note">
+            这里 \(\theta_{\mathrm{ref}}\) 表示参考模型参数，两个对数概率在同一词元上比较被训练策略与参考策略。
+          </p>
+          <p>
+            惩罚项阻止被训练策略离参考模型太远。在 RLHF 中，这是“优化奖励的同时保持语言质量”的关键。
+            在 PPO 风格目标中，\(\beta\) 是控制该惩罚强度的权重。
+          </p>
+        </section>
+
+        <section class="cheat-item" id="ppo">
+          <p class="chapter-number">稳定的 RLHF</p>
+          <h2>PPO 裁剪目标</h2>
+          <div class="equation">
+            \[
+              \min\left(
+                \rho_t A_t,
+                \mathrm{clip}(\rho_t,1-\epsilon,1+\epsilon)A_t
+              \right)
+            \]
+          </div>
+          <p class="notation-note">
+            这里 \(A_t\) 是时间步 \(t\) 的优势，\(\rho_t\) 是策略概率比，\(\epsilon\) 设定裁剪范围。
+          </p>
+          <p>
+            PPO 通过裁剪概率比来限制策略更新，有助于防止奖励过度优化和不稳定的策略漂移。
+          </p>
+          <div class="equation">
+            \[
+              \mathcal{L}(\theta)
+              =
+              -
+              \mathbb{E}_{\mathbf{x}\sim\mathcal{S}_{x}}
+              \mathbb{E}_{\mathbf{y}\sim\mathrm{Pr}_{\theta_{\mathrm{ref}}}(\cdot\mid\mathbf{x})}
+              \left[
+                \sum_{t=1}^{T}
+                \left(
+                  \mathrm{Clip}\left(
+                    \frac{\mathrm{Pr}_{\theta}(y_t\mid\mathbf{x},\mathbf{y}_{&lt;t})}
+                         {\mathrm{Pr}_{\theta_{\mathrm{ref}}}(y_t\mid\mathbf{x},\mathbf{y}_{&lt;t})}
+                    A_t
+                  \right)
+                  -
+                  \beta \mathrm{Penalty}_t
+                \right)
+              \right]
+            \]
+          </div>
+        </section>
+
+        <section class="cheat-item" id="reward-model">
+          <p class="chapter-number">偏好奖励</p>
+          <h2>成对奖励模型损失</h2>
+          <div class="equation">
+            \[
+              \mathcal{L}_{\mathrm{RM}}
+              =
+              -\log \sigma\left(r_{\phi}(\mathbf{x},\mathbf{y}_w)-r_{\phi}(\mathbf{x},\mathbf{y}_l)\right)
+            \]
+          </div>
+          <p class="notation-note">
+            这里 \(r_{\phi}\) 是奖励模型，\(\mathbf{x}\) 是输入，\(\mathbf{y}_w\) 是被偏好的输出序列，\(\mathbf{y}_l\) 是被拒绝的输出序列。
+          </p>
+          <p>
+            奖励模型学习给被偏好的回答打高于被拒绝回答的分数。
+          </p>
+        </section>
+
+        <section class="cheat-item" id="reward-shaping">
+          <p class="chapter-number">更稠密的反馈</p>
+          <h2>奖励塑形</h2>
+          <div class="equation">
+            \[
+              r'_t=r_t+f(\mathbf{x},\mathbf{y}_{&lt;t},y_t),\qquad
+              f=\gamma\Phi(\mathbf{x},\mathbf{y}_{&lt;t+1},y_{t+1})-\Phi(\mathbf{x},\mathbf{y}_{&lt;t},y_t)
+            \]
+          </div>
+          <p class="notation-note">
+            这里 \(r'_t\) 是塑形后的奖励，\(r_t\) 是原始奖励，\(\Phi\) 是用于构造附加反馈项的势函数。
+          </p>
+          <p>
+            塑形加入中间奖励信号。基于势函数的塑形很有用，因为它能在提供更稠密反馈的同时保持期望的最优策略。
+          </p>
+        </section>
+
+        <section class="cheat-item" id="grpo">
+          <p class="chapter-number">组相对 RL</p>
+          <h2>GRPO 优势</h2>
+          <div class="equation">
+            \[
+              A^{\mathrm{GRPO}}_{i,t}
+              =
+              \frac{R(\mathbf{x},\mathbf{y}_i)-\mathrm{Mean}(\mathbf{R})}
+                   {\mathrm{Std}(\mathbf{R})}
+            \]
+          </div>
+          <p class="notation-note">
+            这里 \(\mathbf{y}_i\) 是对同一输入 \(\mathbf{x}\) 采样的一组回答中的一个，\(\mathbf{R}\) 是该组的奖励集合。
+          </p>
+          <p>
+            GRPO 通过比较同一提示下采样的多个回答来估计优势，从而可以省去单独的价值模型。
+          </p>
+          <div class="equation">
+            \[
+              \mathcal{L}_{g}(\theta)
+              =
+              -
+              \mathbb{E}_{\mathbf{x}\sim\mathcal{S}_{x}}
+              \frac{1}{G}
+              \sum_{i=1}^{G}
+              \left[
+                \sum_{t=1}^{T}
+                \mathrm{Clip}\left(
+                  \frac{\mathrm{Pr}_{\theta}(y_{i,t}\mid\mathbf{x},\mathbf{y}_{i,&lt;t})}
+                       {\mathrm{Pr}_{\theta_{\mathrm{ref}}}(y_{i,t}\mid\mathbf{x},\mathbf{y}_{i,&lt;t})}
+                  A_{i,t}^{\mathrm{GRPO}}
+                \right)
+                -
+                \beta \mathrm{Penalty}
+              \right]
+            \]
+          </div>
+        </section>
+
+        <section class="cheat-item" id="dpo">
+          <p class="chapter-number">直接偏好学习</p>
+          <h2>DPO 偏好目标</h2>
+          <div class="equation">
+            \[
+              \mathcal{L}_{\mathrm{DPO}}
+              =
+              -\log \sigma\left(
+                \beta \log \frac{\mathrm{Pr}_{\theta}(\mathbf{y}_w\mid \mathbf{x})}{\mathrm{Pr}_{\theta_{\mathrm{ref}}}(\mathbf{y}_w\mid \mathbf{x})}
+                -
+                \beta \log \frac{\mathrm{Pr}_{\theta}(\mathbf{y}_l\mid \mathbf{x})}{\mathrm{Pr}_{\theta_{\mathrm{ref}}}(\mathbf{y}_l\mid \mathbf{x})}
+              \right)
+            \]
+          </div>
+          <p class="notation-note">
+            这里 \(\mathbf{y}_w\) 与 \(\mathbf{y}_l\) 分别是被偏好与被拒绝的输出序列，\(\theta_{\mathrm{ref}}\) 是参考模型，
+            \(\beta\) 控制隐式奖励比的强度。
+          </p>
+          <p>
+            DPO 直接从偏好对优化策略，在其基本形式中避免了“先训练奖励模型、再做强化学习”的显式流水线。
+          </p>
+        </section>
+
+        <section class="cheat-item" id="mcts">
+          <p class="chapter-number">推理搜索</p>
+          <h2>MCTS 中的 UCT 选择</h2>
+          <div class="equation">
+            \[
+              \bar{\mathbf{y}}_k^*
+              =
+              \arg\max_{\bar{\mathbf{y}}_k}
+              \left(
+                \bar{R}(\bar{\mathbf{y}}_k)
+                +
+                c\sqrt{\frac{\ln N_p}{N_{\bar{\mathbf{y}}_k}}}
+              \right)
+            \]
+          </div>
+          <p class="notation-note">
+            这里 \(\bar{\mathbf{y}}_k\) 是一个候选推理步骤，\(N_p\) 是父节点访问次数，\(N_{\bar{\mathbf{y}}_k}\) 是子节点访问次数，
+            \(c\) 平衡利用与探索。
+          </p>
+          <p>
+            MCTS 在利用有前景的推理步骤与探索访问不足的其他分支之间取得平衡，是理解“验证器引导推理”的有用心智模型。
+          </p>
+        </section>
+
+        <section class="cheat-item" id="agent-rl">
+          <p class="chapter-number">交互式智能体</p>
+          <h2>智能体轨迹目标</h2>
+          <div class="equation">
+            \[
+              \tau=[p,u_1,o_1,\ldots,u_T,o_T],\qquad
+              \theta^*=\arg\max_{\theta}
+              \mathbb{E}_{\tau\sim\pi_{\theta}(\cdot\mid e,q)}
+              \left[R(\tau)\right]
+            \]
+          </div>
+          <p class="notation-note">
+            这里 \(e\) 是环境信息，\(q\) 是用户任务，\(p\) 是生成的计划，\(u_t,o_t\) 是第 \(t\) 步的智能体行为与环境观测。
+          </p>
+          <p>
+            智能体强化学习优化的是计划与“动作-观测”轨迹，而不只是单次补全，因此延迟奖励与信用分配变得格外重要。
+          </p>
+        </section>
+
+        <section class="cheat-item" id="multimodal">
+          <p class="chapter-number">超越文本</p>
+          <h2>多模态生成的 RL 目标</h2>
+          <div class="equation">
+            \[
+              \max_{\theta}
+              \mathbb{E}_{\mathbf{z}\sim p(\mathbf{z}),\,\mathbf{x}_0\sim p_{\theta}(\mathbf{x}_0\mid \mathbf{z})}
+              \left[
+                R_{\mathrm{dm}}(\mathbf{x}_0,\mathbf{z})
+              \right]
+            \]
+          </div>
+          <p class="notation-note">
+            这里 \(\mathbf{z}\) 表示文本提示，\(\mathbf{x}_0\) 是生成样本，\(R_{\mathrm{dm}}\) 是评价该样本的奖励函数。
+          </p>
+          <p>
+            对图像生成，最终样本可以用对齐度、美学、安全性或偏好奖励打分，而去噪过程提供了被优化的轨迹。
+          </p>
+          <div class="equation">
+            \[
+              \mathcal{L}_{\mathrm{dmrl}}(\theta)
+              =
+              -
+              \mathbb{E}_{\mathbf{z}\sim S_z,\,\tau_{\mathrm{dm}}\sim \mathrm{Pr}_{\theta}(\cdot)}
+              \left[
+                \sum_{t=0}^{T-1}
+                \log U_{\theta}(\mathbf{x}_{T-t-1}\mid\mathbf{x}_{T-t},\mathbf{z})
+                R_{\mathrm{dm}}(\mathbf{x}_0,\mathbf{z})
+              \right]
+            \]
+          </div>
+          <p class="notation-note">
+            这沿用了论文中 DPOK 风格的去噪轨迹建模；后续的扩散强化学习变体可能修改正则化、参考模型或优势估计器。
+          </p>
+          <div class="equation">
+            \[
+              \mathcal{L}_{\mathrm{fmgrpo}}(\theta)
+              =
+              -
+              \mathbb{E}_{\mathbf{z}\sim S_z,\,\tau_{\mathrm{fm}}\sim \mathrm{Pr}(\cdot)}
+              \frac{1}{G}
+              \sum_{i=1}^{G}
+              \left[
+                \frac{1}{T}
+                \sum_t
+                \min
+                \left(
+                  \frac{\mathrm{Pr}_{\theta}(a_t^i\mid s_t^i)}
+                       {\mathrm{Pr}_{\theta_{\mathrm{old}}}(a_t^i\mid s_t^i)}
+                  \hat{A}_i,
+                  \mathrm{clip}
+                  \left(
+                    \frac{\mathrm{Pr}_{\theta}(a_t^i\mid s_t^i)}
+                         {\mathrm{Pr}_{\theta_{\mathrm{old}}}(a_t^i\mid s_t^i)},
+                    1-\epsilon,
+                    1+\epsilon
+                  \right)
+                  \hat{A}_i
+                \right)
+              \right]
+            \]
+          </div>
+          <p class="notation-note">
+            这沿用了 Flow-GRPO：把基于 ODE 的流匹配转化为随机 MDP 以进行在线强化学习；
+            后续的流匹配强化学习变体可能改变随机化方式或组相对更新。
+          </p>
+        </section>
+
+        <nav class="reader-footer" aria-label="速查表页脚">
+          <a href="reader.html">打开在线读本（中文版）</a>
+          <a href="glossary.html">打开术语表</a>
+        </nav>
+      </article>
+    </main>
+  </body>
+</html>

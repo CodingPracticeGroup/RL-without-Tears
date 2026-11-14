@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>第 6 章 面向 LLM 智能体的强化学习 —《RL without Tears》中文全译</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="../../assets/favicon/favicon-32.png">
+    <link rel="stylesheet" href="pdf.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+    <script defer src="../site/math.js"></script>
+  </head>
+  <body>
+    <div class="zh-banner">
+      《RL without Tears》中文全译（AI 辅助翻译，非官方译本） ·
+      <a href="../../index.html">中文目录</a> ·
+      <a href="index.html">PDF 版目录</a> ·
+      <a href="https://niutrans.github.io/RL-without-Tears/">英文原版网站</a>
+    </div>
+    <div class="wrap">
+      <p class="crumbs"><a href="index.html">← PDF 版目录</a></p>
+                              

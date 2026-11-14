@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>第 8 章 结论与未来方向 —《RL without Tears》中文全译</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="../../assets/favicon/favicon-32.png">
+    <link rel="stylesheet" href="pdf.css?v=20261113">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+    <script defer src="../site/math.js"></script>
+  </head>
+  <body>
+    <div class="zh-banner">
+      《RL without Tears》中文全译（AI 辅助翻译，非官方译本） ·
+      <a href="../../index.html">中文目录</a> ·
+      <a href="index.html">PDF 版目录</a> ·
+      <a href="https://niutrans.github.io/RL-without-Tears/">英文原版网站</a>
+    </div>
+    <div class="wrap">
+      <p class="crumbs"><a href="index.html">← PDF 版目录</a></p>
+                                    <h1>第 8 章 结论与未来方向</h1>
+      <p class="subtitle">Conclusions and Future Directions</p>
+      <p class="chapter-meta">
+        对应英文原版 PDF 第 80–81 页（§8）。
+      </p>
+
+      <h2>8 结论与未来方向</h2>
+      <p>
+        本文从 LLM 训练的视角介绍了强化学习的基本概念。我们从强化学习的基本表述与算法出发，涵盖策略梯度、优势估计、重要性采样与奖励建模，
+        并通过 LLM 训练的例子加以讲解；随后讨论了强化学习的近期进展，进一步把讨论扩展到推理模型、智能体系统与多模态模型，
+        展示强化学习如何从通用的策略优化框架，演进为增强 LLM 推理、交互式决策与多模态生成能力的关键范式。
+      </p>
+      <p>
+        尽管强化学习在 LLM 训练中已相当成熟、取得了显著成果，仍有若干有前景的方向值得未来探索：
+      </p>
+      <p>
+        • <strong>面向预训练的强化学习。</strong>现有研究大多聚焦后训练阶段应用强化学习，其在预训练中的作用仍探索不足。
+        把奖励驱动的学习扩展到预训练阶段，可能为在训练更早的环节塑造模型能力提供途径。近期研究已开始展现这一方向的潜力（Dong et al., 2025），
+        但要在预训练规模实现稳定可扩展的优化仍是重要挑战。
+      </p>
+      <p>
+        • <strong>更高效的强化学习训练。</strong>GRPO 等新方法通过去掉评论器模型等组件简化了强化学习训练，但强化学习仍严重依赖在线采样，
+        带来可观的计算与时间成本。提升采样效率、降低整体训练成本，仍是未来研究的重要方向。
+      </p>
+      <p>
+        • <strong>预测强化学习的规模上限。</strong>强化学习的最终收益取决于许多因素：模型能力、训练数据、奖励质量与优化设置。
+        实践中，我们往往要先完成昂贵的强化学习训练，才能知道最终性能。发展方法在全量训练之前预测强化学习可能的收益与性能上限，
+        能显著提升模型研发效率。
+      </p>
+      <p>
+        • <strong>持续与自我演化的强化学习。</strong>当前多数强化学习流水线在固定的训练分布上优化模型，训练一结束就停止。
+        更宏大的方向是让模型在部署后持续从自身交互、反馈与积累的经验中学习。这需要在经验选择、记忆与技能演化、
+        以及避免灾难性遗忘的稳定策略更新等方面发展新机制。
+      </p>
+
+      <h2>致谢</h2>
+      <p style="font-size:.92em;color:#444;">
+        本工作部分受以下项目资助：国家自然科学基金（No. 62276056 与 U24A20334）、云南省基础研究计划项目（No.202401BC070021）、
+        云南省重大项目（No. 202502AD080014）、辽宁省科技计划项目（No. 2026JH40/1010033）、中央高校基本科研业务费专项资金
+        （No. N25BSS054 与 N25BSS094）、学科引进人才科研启动计划（No.B16009）。作者感谢 Ziming Zhu、Yuzhang Wu、Yifu Huo、
+        Xihan Yang 与 Kaiwei Wang 提出的宝贵意见与讨论，这些意见帮助改进了本文。
+      </p>
+      <p class="pagebreak-note">［全书正文完。附录与参考文献见后续页面。］</p>
+
+      <nav class="chapter-nav">
+        <a href="ch07.html">← 上一章：多模态强化学习</a>
+        <a href="app.html">附录：系统、数据集与提示模板 →</a>
+      </nav>
+    </div>
+  </body>
+</html>

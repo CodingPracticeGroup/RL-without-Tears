@@ -1,0 +1,727 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>第 4 章 面向 LLM 的改进强化学习 —《RL without Tears》中文全译</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="../../assets/favicon/favicon-32.png">
+    <link rel="stylesheet" href="pdf.css?v=20261113">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+    <script defer src="../site/math.js"></script>
+  </head>
+  <body>
+    <div class="zh-banner">
+      《RL without Tears》中文全译（AI 辅助翻译，非官方译本） ·
+      <a href="../../index.html">中文目录</a> ·
+      <a href="index.html">PDF 版目录</a> ·
+      <a href="https://niutrans.github.io/RL-without-Tears/">英文原版网站</a>
+    </div>
+    <div class="wrap">
+      <p class="crumbs"><a href="index.html">← PDF 版目录</a></p>
+                  <h1>第 4 章 面向 LLM 的改进强化学习</h1>
+      <p class="subtitle">Improved RL for LLMs</p>
+      <p class="chapter-meta">
+        对应英文原版 PDF 第 27–45 页（§4）。公式编号与原书一致（39 起）；图表为原书页截图或依据原表重排的译文。
+      </p>
+
+      <h2>4 面向 LLM 的改进强化学习</h2>
+      <p>
+        上一节介绍了重要性采样、奖励基线等对强化学习的改进；但把它们直接用于训练 LLM 仍面临诸多挑战。
+        本节进一步深入，讨论用强化学习训练 LLM 的种种改进。
+      </p>
+
+      <h2>4.1 更高级的奖励模型</h2>
+      <p>
+        奖励模型是强化学习的基础组件，因为它定义了策略模型优化的目标。因此，奖励模型的训练质量直接影响 RLHF 阶段 LLM 优化的效果：
+        欠佳的奖励模型会把 LLM 引向次优，而优秀的奖励模型能确保 LLM 与期望的行为和目标有效对齐。这里我们介绍几种获得高级奖励模型的方法。
+        讨论会比较通用，因为奖励模型在机器人规划与控制等大量强化学习问题中都被广泛使用；这种通用性也让下文方法易于迁移到其他相关应用。
+      </p>
+
+      <h3>4.1.1 自动偏好数据生成</h3>
+      <p>
+        从人类偏好中学习是对 LLM 进行对齐的有效流行方法，但标注偏好数据代价高昂。依赖人类反馈不仅有可扩展性瓶颈，还可能引入偏差——
+        人类反馈本质上是主观的。因此，基于 AI 的反馈方法为这些可扩展性与一致性问题提供了有前景的解法，绕开了人类标注的局限。
+      </p>
+      <p>
+        一种简单的方法是用 LLM 生成偏好数据。给定一组输入，先用 LLM 生成成对的输出，然后提示 LLM 对每一对之间的偏好进行标注。
+        下面是提示 LLM 为一对输出生成偏好标签的示例：
+      </p>
+      <div class="promptbox">
+        Consider a homework assistant scenario in which a student types an input. You will review two outputs to this input.
+        Please indicate which output you prefer. A good output should be informative, accurate, and well-articulated.
+        It should directly address the student's question, provide thorough explanations or solutions, and maintain an encouraging tone.<br><br>
+        Input:<br><em>Give me three tips to improve my accuracy in solving math problems.</em><br><br>
+        Output A:<br><em>Improving math accuracy requires careful attention to detail, strategic problem-solving techniques,
+        and consistent practice. Here are three tips: 1. Practice regularly: - Consistent practice builds fluency and familiarity
+        with different problem types… … By combining your advice with these additional tips, anyone can significantly enhance their math
+        problem-solving abilities.</em><br><br>
+        Output B:<br><em>There are three tips for improving accuracy in solving math problems: 1. Practice regularly.
+        2. Understand the concepts. 3. Double-check your work.</em><br><br>
+        <span style="text-decoration:underline;">Output A is preferred.</span>
+        <br><br><em>（中文示意：请审阅同一输入的两个回答，指出你更偏好哪个。好的回答应有信息量、准确、表达清晰，直击问题、给出充分解释并保持鼓励的语气。示例判定了输出 A 更优。）</em>
+      </div>
+      <p>
+        收集到这样的偏好标签后，就可以连同输出对与输入一起训练奖励模型。当然，这些标签并非完全准确。近期研究发现，AI 反馈常有位置偏差
+        （position bias）：更倾向于偏好在前面展示的那个输出（Zheng et al., 2023）。可以考虑给出若干示范示例，
+        或用思维链（CoT）等高级提示技术来提升标注质量（Liu et al., 2023）。
+      </p>
+      <p>
+        就数据生成而言，扩规模容易，但还需保证数据准确且多样。这里的质量与多样性问题不只关乎偏好标注，也关乎模型输入输出的多样性，
+        因此往往需要用多种技术来获得大规模高质量数据。例如，可以通过使用不同 LLM、不同提示、上下文示范等方式生成多样的模型输出与标注
+        （Cui et al., 2024b）。此外，Dubois et al.（2023）指出：成对偏好数据的多样性，对用人类或 AI 反馈训练 LLM 都很重要。
+      </p>
+      <p>
+        从 AI 反馈学习虽然高度可扩展、总体客观，但更适合有客观性能指标可依托的定义明确的任务；相比之下，当目标是让 AI 系统对齐人类价值观、
+        偏好，或需要理解微妙主观语境的复杂现实任务时，人类反馈更有优势。两类方法可以结合，训练同时受益于人类洞察与 AI 反馈可扩展性的 LLM。
+      </p>
+
+      <h3>4.1.2 奖励塑形</h3>
+      <p>
+        如 3.6 节所讨论，奖励模型虽然擅长捕捉人类偏好，但提供的是稀疏奖励。这类奖励只在输出结束时才被收到，称为延迟奖励，
+        而不是在整个生成过程中持续分布的中间奖励。
+      </p>
+      <figure class="float">
+        <img src="figs/p29-fig13.png?v=figfix3" alt="图13：奖励塑形示例">
+        <figcaption>
+          <strong>图 13：</strong>奖励塑形示例。这里实现的是基于长度的塑形奖励：每生成 10 个词元给 +1 的中间奖励；
+          最后再由奖励模型用一个延迟奖励评估输出的整体质量。（原图截取自英文原版 PDF 第 29 页）
+        </figcaption>
+      </figure>
+      <p>
+        事实上，如何处理稀疏奖励一直是强化学习长期关注的问题，也是许多实际应用的难点之一。例如机器人领域往往需要塑形奖励函数来便于优化，
+        而不能只依赖序列结束时的奖励。已有多种方法用于解决这一问题。一种常见做法是奖励塑形（reward shaping）：修改原奖励函数、加入中间奖励，
+        提供更即时的反馈。这里的中间奖励通常是改进延迟奖励的间接信号。例如图 13 所示，把长度奖励作为中间奖励可以鼓励模型生成更多内容，
+        进而可能提升奖励模型所评估的最终输出的整体质量。更多在训练 LLM 中做奖励塑形的例子见 Kumar et al.（2025）。这样我们得到：
+      </p>
+      <div class="equation">\[ r_t' \;=\; r_t + f(\mathbf{x},\mathbf{y}_{\lt t},y_t) \tag{39} \]</div>
+      <p>
+        其中 \(r'(\cdot)\) 是变换后的奖励，\(r(\cdot)\) 是原始延迟奖励函数，\(f(\cdot)\) 是提供中间奖励的塑形奖励函数。
+        为保证在新奖励函数下策略的最优性不变，塑形奖励函数可取如下形式：
+      </p>
+      <div class="equation">\[ f(\mathbf{x},\mathbf{y}_{\lt t},y_t) \;=\; \gamma\Phi(\mathbf{x},\mathbf{y}_{\lt t+1},y_{t+1})-\Phi(\mathbf{x},\mathbf{y}_{\lt t},y_t) \tag{40} \]</div>
+      <p>
+        其中 \(\Phi(\cdot)\) 称为势函数（potential value function），\(\gamma\) 是折扣因子，控制下一步势能对本次塑形奖励的贡献程度。
+        若把 \(\Phi(\cdot)\) 定义为普通的价值函数并代入式 (40)，得到：
+      </p>
+      <div class="equation">\[ r_t' \;=\; r_t + \gamma V_{t+1}-V_t \tag{41} \]</div>
+      <p>
+        有趣的是，这个函数与 PPO 中使用的优势函数完全相同。这把基于优势的方法与奖励塑形联系起来：优势本质上就是一种塑形奖励。
+      </p>
+      <p>
+        实践中，在 LLM 训练中实现奖励塑形的另一种方法是利用奖励模型、基于输出奖励之差提供中间奖励
+        （Bahdanau et al., 2017; Wu et al., 2023）。例如在时间步 \(t\)，中间奖励 \(r_t\) 可由下式得到：
+      </p>
+      <div class="equation">\[ r_t \;=\; R(\mathbf{x},\mathbf{y}_{\lt t+1})-R(\mathbf{x},\mathbf{y}_{\lt t}) \tag{42} \]</div>
+      <p>
+        但这种情况下，要求奖励模型能够准确地为部分输出打分，即给
+        \(\{\mathbf{y}_{\lt 2},\mathbf{y}_{\lt 3},\cdots,\mathbf{y}_{\lt T}\}\) 打分。
+      </p>
+      <p>
+        除了奖励塑形，解决稀疏奖励问题的另一种方法是采用课程学习（curriculum learning）：把任务按复杂度从低到高组织成序列，
+        让模型先掌握较简单的任务，为技能提升后应对更复杂的挑战做好准备。还有许多方法可以缓解稀疏奖励的影响，如蒙特卡洛方法与内在动机。
+        这些方法大多是通用的，可在更广泛的强化学习文献（如 Sutton &amp; Barto（2018）的著作）中找到相关讨论。
+      </p>
+
+      <h3>4.1.3 提升奖励的泛化能力</h3>
+      <p>
+        如 3.6 节所述，奖励模型用偏好数据训练、随后用于优化 LLM。这带来一个问题：LLM 优化过程中的数据分布可能与偏好数据的分布不同，
+        奖励模型难以泛化到未见过的输入-输出对。
+      </p>
+      <p>
+        与这一问题相关的著名失效模式通常称为过度优化或奖励投机（overoptimization or reward hacking）：优化阶段提升了奖励模型给出的分数，
+        却损害了与真实奖励的一致性（Gao et al., 2023; Eisenstein et al., 2023）。原因在于奖励模型可能错误地给未见过的输入-输出对高分，
+        使 LLM 学习并优化实际上不符合期望行为与目标的行为。例如回到 3.1 节的场景：奖励模型本应为作业辅导场景中信息充分且准确的输出给高分；
+        但若它没能泛化到过于冗长的输出、仅因长度或某些关键词就给高分，LLM 可能学会优先产出更长的回答——内容并未更有信息量，
+        却按奖励模型能拿到更高分。结果，LLM 与其真正目标发生偏离，不再给出简洁、切题的信息：它在奖励模型泛化不佳的错误奖励信号上做优化。
+      </p>
+      <p>
+        解决这一泛化问题很有挑战，目前还没有成熟方案。理想方法是开发一个“神谕”奖励模型：完美刻画任务的真实目标，
+        并在 LLM 优化中泛化到所有输入-输出对。但由于真实环境的复杂性以及收集充足偏好数据的困难，造出这样的模型极其困难。
+        更可行的做法是组合多个奖励模型：以增强泛化、提供更准确的奖励（Coste et al., 2024）。
+      </p>
+      <p>
+        给定一组奖励模型，组合它们很直接；某些情况下可以把这当作集成学习问题。一个简单但常用的做法是对这些模型的输出取平均，
+        得到更精确的奖励估计：
+      </p>
+      <div class="equation">\[ R_{\mathrm{combine}}(\mathbf{x},\mathbf{y}) \;=\; \frac{1}{K}\sum_{k=1}^{K}w_k\cdot R_k(\mathbf{x},\mathbf{y}) \tag{43} \]</div>
+      <p>
+        其中 \(R_k(\cdot)\) 是集成中的第 \(k\) 个奖励模型，\(w_k\) 是其权重，\(K\) 是奖励模型数量。组合得到的奖励可用于监督策略的训练。
+        事实上，组合模型的方式还有很多：例如用贝叶斯模型平均做预测，或训练一个融合网络来学习如何融合不同模型的预测；
+        也可以把该问题表述为多目标优化、用多个奖励模型同时训练策略。这些方法在优化与机器学习领域有深入研究
+        （Miettinen, 1999; Bishop, 2006）。
+      </p>
+      <p>
+        另一方面，提升奖励模型的泛化，还必须防止它对偏好数据过拟合。奖励模型通常在具备很强泛化能力的 SFT LLM 基础上训练；
+        然而，用大量偏好数据训练 LLM 可能导致过拟合，最终反而损害泛化表现。常见的缓解策略是采用参数冻结技术：
+        常见的缓解策略是采用参数冻结技术（parameter freezing）：在学习奖励模型的同时保留 LLM 的原有特征。
+        另一种实用做法是在偏好学习损失上增加正则项，帮助约束 LLM 的特征（Yang et al., 2024）。例如，可以用一个简单的 SFT 损失做正则：
+        在式 (36) 上追加一个最大化偏好输出 \(\mathbf{y}_a\) 概率的项：
+      </p>
+      <div class="equation">\[ \mathcal{L}_{\mathrm{reg}}(\phi) \;=\; -\mathbb{E}_{(\mathbf{x},\mathbf{y}_a,\mathbf{y}_b)\sim\mathcal{D}_r}\big[\log \mathrm{Pr}_{\phi}(\mathbf{y}_a\succ\mathbf{y}_b\mid\mathbf{x})+\alpha\log(\mathrm{Pr}_{\theta}(\mathbf{y}_a\mid\mathbf{x}))\big] \tag{44} \]</div>
+      <p>
+        其中 \(\alpha\) 是平衡系数。图 14 进一步展示了训练奖励模型时的参数冻结与正则化方法。注意该正则项只作用于 LLM：
+        优化这一项时只更新 LLM 的参数，奖励线性映射层的参数保持固定。因此在式 (44) 中，正则项对应的参数是 \(\theta\)，特指 LLM 的参数。
+      </p>
+      <figure class="float">
+        <img src="figs/p31-fig14.png?v=figfix3" alt="图14：参数冻结与正则化方法">
+        <figcaption>
+          <strong>图 14：</strong>训练奖励模型时，可用参数冻结与正则化方法保留 LLM 的特征，从而提升奖励的泛化能力。
+          （原图截取自英文原版 PDF 第 31 页）
+        </figcaption>
+      </figure>
+
+      <h3>4.1.4 生成式奖励模型</h3>
+      <p>
+        奖励模型通常按判别式模型训练：给输出打数值奖励，并分类为受偏好或不受偏好。然而，这一做法没有利用 LLM 被设计出来时所依托的
+        文本生成能力（Zhang et al., 2025b; Wang et al., 2025a）。例如判别式奖励模型无法做 CoT 推理。为解决这一问题，
+        可以转而把 LLM 用作奖励模型，使其具备文本生成与推理能力，如图 15 所示。
+      </p>
+      <figure class="float">
+        <img src="figs/p31-fig15.png?v=figfix3" alt="图15：生成式奖励模型，用 LLM 预测标签词元">
+        <figcaption>
+          <strong>图 15：</strong>在生成式奖励模型中，我们用一个 LLM 在给定提示、输入和一对输出时预测标签词元。
+          该模型的训练方式与标准 LLM 完全相同。（原图截取自英文原版 PDF 第 31 页）
+        </figcaption>
+      </figure>
+      <p>
+        这种模型的工作方式如下：首先，把提示 \(\mathbf{c}\)
+        连同三元组 \((\mathbf{x},\mathbf{y}_a,\mathbf{y}_b)\) 输入 LLM。提示是任务说明，如下例所示：
+      </p>
+      <div class="promptbox">
+        You are given two outputs to an input. Evaluate which output is better based on quality, relevance, and clarity.
+        If the first output is better, return ‘A’. If the second output is better, return ‘B’.
+        <br><br><em>（中文示意：给定某输入的两个输出，请依据质量、相关性、清晰度评估哪个更好。第一个更好返回 A，第二个更好返回 B。）</em>
+      </div>
+      <p>
+        然后，LLM 基于该输入序列预测后续词元。设 \(w\) 为 LLM 预测的标签词元，\(w^*\) 为标注的偏好标签：\(w^*=\mathrm{A}\) 表示偏好
+        \(\mathbf{y}_a\) 胜过 \(\mathbf{y}_b\)；\(w^*=\mathrm{B}\) 表示偏好 \(\mathbf{y}_b\)。注意这里的 \(\mathbf{y}_a\) 与 \(\mathbf{y}_b\)
+        不像 3.6 节那样预先定义了偏好关系，它们的关系由标签词元表示。
+      </p>
+      <p>损失函数可定义为“预测出标注偏好标签”的对数概率：</p>
+      <div class="equation">\[ \mathcal{L}_{\mathrm{gen}}(\theta) \;=\; -\mathbb{E}_{(\mathbf{c},\mathbf{x},\mathbf{y}_a,\mathbf{y}_b,w^*)\sim\mathcal{D}_r}\big[\log \mathrm{Pr}_{\theta}(w=w^*\mid\mathbf{s})\big] \tag{45} \]</div>
+      <p>
+        其中 \(\mathbf{s}\) 表示字符串 \([\mathbf{c},\mathbf{x},\mathbf{y}_a,\mathbf{y}_b]\)<sup>8</sup>，\(\mathrm{Pr}_{\theta}(\cdot)\)
+        表示 LLM 的词元预测概率。
+      </p>
+      <p style="font-size:.85em;color:#5b6773;">
+        <sup>8</sup> 本文中，\(\mathbf{s}\) 交替指代“训练样本的元组”或“表示该元组的字符串”。
+      </p>
+      <p>
+        这里讨论的是生成式奖励模型的训练方法，但自然有个问题：如何在 RLHF 中使用它？下面给出一些指引。具体地，对一个输入-输出对
+        \((\mathbf{x}',\mathbf{y}')\) 应用生成式奖励模型、为奖励建模如下：先用 LLM（例如通过束搜索）为 \(\mathbf{x}'\) 生成一个参考输出
+        \(\mathbf{y}_{\mathrm{ref}}\)，再把 \(\mathbf{x}'\)、\(\mathbf{y}'\) 与 \(\mathbf{y}_{\mathrm{ref}}\) 拼接为
+        \(\mathbf{s}'=[\mathbf{c},\mathbf{x}',\mathbf{y}',\mathbf{y}_{\mathrm{ref}}]\)。为缓解位置偏置问题（Wang et al., 2024c），
+        可引入另一种输入顺序：交换输出的位置，把 \(\mathbf{y}_{\mathrm{ref}}\) 放在 \(\mathbf{y}'\) 之前，构造次级输入串
+        \(\mathbf{s}'_{T}=[\mathbf{c},\mathbf{x}',\mathbf{y}_{\mathrm{ref}},\mathbf{y}']\)。于是 \((\mathbf{x}',\mathbf{y}')\)
+        的奖励定义为“\(\mathbf{y}'\) 相对 \(\mathbf{y}_{\mathrm{ref}}\) 更受偏好”的概率：
+      </p>
+      <div class="equation">\[ R_{\hat{\phi}}(\mathbf{x}',\mathbf{y}') \;=\; \frac{\mathrm{Pr}_{\theta}(w=\mathrm{A}\mid\mathbf{s}')+\mathrm{Pr}_{\theta}(w=\mathrm{B}\mid\mathbf{s}'_{T})}{2} \tag{46} \]</div>
+      <p>其中奖励的取值范围为 0 到 1。</p>
+      <p>
+        要进一步改进生成式奖励模型，可以为相关解释做标注，使模型能产出 CoT 依据（rationale）（Zhang et al., 2025a; Wang et al., 2026c）。
+        这时，我们在提示 \(\mathbf{c}\) 中加入“生成 CoT 依据”的指令，如下所示：
+      </p>
+      <div class="promptbox">
+        You are given two outputs to a user input. Evaluate which output is better based on quality, relevance, and clarity.
+        If the first output is better, return ‘A’. If the second output is better, return ‘B’. Note that, before presenting the
+        evaluation results, you should provide a detailed analytical process and reasoning steps.
+        <br><br><em>（中文示意：在给出评估结果之前，请先提供详细的分析过程与推理步骤。）</em>
+      </div>
+      <p>于是可以为生成式奖励模型定义一个新的训练损失：</p>
+      <div class="equation">\[ \mathcal{L}_{\mathrm{gen}}(\theta) \;=\; -\mathbb{E}_{(\mathbf{c},\mathbf{x},\mathbf{y}_a,\mathbf{y}_b,\mathbf{rat},w^*)\sim\mathcal{D}_r}\big[\log \mathrm{Pr}_{\theta}(\mathbf{rat}\mid\mathbf{s})+\log \mathrm{Pr}_{\theta}(w=w^*\mid[\mathbf{s},\mathbf{rat}])\big] \tag{47} \]</div>
+      <p>
+        其中 \(\mathbf{rat}\) 是为 \(\mathbf{y}_a\) 与 \(\mathbf{y}_b\) 之间偏好给出的标注 CoT 依据。实践中，评估结果可通过提示标准 LLM
+        原因之一是：标准 LLM 并非为奖励建模任务做过微调，因此可能无法完全捕捉更符合人类偏好的决策过程。而且，用偏好数据训练过的 LLM
+        学会了依据反馈来排序输出，能按期望的行为与目标来评估输出。
+      </p>
+      <p>
+        虽然在生成式奖励模型中引入 CoT 依据能改进偏好学习，却也在式 (46) 中引入了概率退化（probability degeneration）问题：
+        偏好词元的概率常饱和到 0 或 1 附近，奖励方差变得很小。这对 GRPO 之类依赖相对奖励差做策略优化的强化学习算法尤其棘手。
+        为克服这一局限，研究者探索了基于排序的奖励构造方法：基本思路是只利用生成式奖励模型的排序能力，为强化学习导出奖励
+        （Wang et al., 2026d）。感兴趣的读者可参阅该工作了解更多细节。
+      </p>
+
+      <h3>4.1.5 基于评分细则的奖励模型</h3>
+      <p>
+        生成式奖励模型在偏好预测上表现强劲，但它对每条回答或回答对只给出一个整体判断。对复杂的开放式任务而言，这种整体式评估可能不够，
+        因为回答质量往往取决于多个与具体指令相关的方面。为此可以采用基于评分细则（rubric-based）的奖励建模：
+        基本思想是引入一组任务特定的标准，在预测偏好时明确告诉奖励模型应当<em>从哪些方面进行评估</em>。实践中，这些标准可以组织成不同的
+        评分细则格式，如下所示（各例中带下划线的文本即评分细则）。
+      </p>
+      <p>
+        <strong>整体式评分细则（Holistic Rubric）。</strong>
+        整体式评分细则给出多条评估标准，但要求奖励模型只输出一个总体判断。例如：
+      </p>
+      <div class="promptbox">
+        <strong>Reward Model Input:</strong><br>
+        <em>Input:</em> Give me three tips to improve my accuracy in solving math problems.<br>
+        <em>Output A:</em> Improving math accuracy requires careful attention to detail and consistent practice.
+        Here are three tips: practice regularly, understand the concepts, and …<br>
+        <em>Output B:</em> Practice more, read carefully, and check your answers.<br>
+        <span style="text-decoration:underline;">Please compare the two outputs based on accuracy, informativeness, clarity, and helpfulness,</span>
+        <span style="text-decoration:underline;">and give an overall preference.</span><br><br>
+        <strong>Reward Model Output:</strong><br>
+        Output A is better overall because it provides more informative and helpful suggestions. … Therefore, the reward model
+        assigns a higher reward to Output A and selects Output A as the preferred response.
+        <br><br><em>（中文示意：请依据准确性、信息量、清晰度与有用性比较两个回答，并给出总体偏好。）</em>
+      </div>
+      <p>
+        <strong>逐标准打分细则（Criterion-wise Scoring Rubric）。</strong>
+        逐标准打分细则要求奖励模型为每条评估标准分别打分，再对这些标准级分数取平均或加权，得到最终奖励。
+      </p>
+      <div class="promptbox">
+        <strong>Reward Model Input:</strong><br>
+        <em>Input:</em> Give me three tips to improve my accuracy in solving math problems.<br>
+        <em>Output A:</em> Improving math accuracy requires careful attention to detail and consistent practice.
+        Here are three tips: practice regularly, understand the concepts, and …<br>
+        <em>Output B:</em> Practice more, read carefully, and check your answers.<br>
+        <span style="text-decoration:underline;">Please score each output from 1 to 5 on the following criteria: accuracy, informativeness, clarity, and helpfulness.</span><br><br>
+        <strong>Reward Model Output:</strong><br>
+        Output A: Accuracy 5/5; Informativeness 5/5; Clarity 4/5; Helpfulness 5/5.<br>
+        Output B: Accuracy 4/5; Informativeness 2/5; Clarity 4/5; Helpfulness 3/5. … After aggregating the criterion-level scores,
+        Output A receives the higher overall score and is preferred over Output B.
+        <br><br><em>（中文示意：请按准确性、信息量、清晰度、有用性，为两个回答各打 1–5 分；聚合后 A 总分更高、更受偏好。）</em>
+      </div>
+      <p>
+        <strong>清单式细则（Checklist Rubric）。</strong>
+        清单式细则把评估分解为原子的、可验证的条件，每个条件独立评估，通常使用 Pass/Fail 这类二值标签。
+      </p>
+      <div class="promptbox">
+        <strong>Reward Model Input:</strong><br>
+        <em>Input:</em> Give me three tips to improve my accuracy in solving math problems.<br>
+        <em>Output A:</em> Improving math accuracy requires careful attention to detail and consistent practice.
+        Here are three tips: practice regularly, understand the concepts, and …<br>
+        <em>Output B:</em> Practice more, read carefully, and check your answers.<br>
+        Please check whether each output satisfies the following requirements:<br>
+        <span style="text-decoration:underline;">1. Does the response provide exactly three tips?</span><br>
+        <span style="text-decoration:underline;">2. Are the tips relevant to improving math accuracy?</span><br>
+        <span style="text-decoration:underline;">3. Does the response explain the suggested tips?</span><br>
+        <span style="text-decoration:underline;">4. Is the response clear and easy to understand?</span><br><br>
+        <strong>Reward Model Output:</strong><br>
+        Output A: Pass, Pass, Pass, Pass.<br>
+        Output B: Pass, Pass, Fail, Pass. … Since Output A satisfies all checklist items while Output B does not explain the tips,
+        Output A is assigned the higher reward.
+        <br><br><em>（中文示意：逐项检查回答是否满足要求：恰好三条建议 / 建议与提高数学正确率相关 / 解释了建议 / 清晰易懂；A 全部通过，B 第三条未通过，故 A 得分更高。）</em>
+      </div>
+      <p>
+        <strong>层次式细则（Hierarchical Rubric）。</strong>
+        层次式细则把评估标准组织为多个层级：奖励模型先依据较低层的标准评估候选输出，再把这些结果聚合到更高层的维度，得到最终奖励。
+      </p>
+      <div class="promptbox">
+        <strong>Reward Model Input:</strong><br>
+        <em>Input:</em> Give me three tips to improve my accuracy in solving math problems.<br>
+        <em>Output A:</em> Improving math accuracy requires careful attention to detail and consistent practice.
+        Here are three tips: practice regularly, understand the concepts, and …<br>
+        <em>Output B:</em> Practice more, read carefully, and check your answers.<br>
+        Please evaluate the outputs using the following hierarchical criteria:<br>
+        <span style="text-decoration:underline;">Content Quality: Accuracy, Informativeness</span><br>
+        <span style="text-decoration:underline;">Presentation Quality: Clarity, Helpfulness</span><br><br>
+        <strong>Reward Model Output:</strong><br>
+        Output A: Content Quality 5/5; Presentation Quality 4.5/5.<br>
+        Output B: Content Quality 3/5; Presentation Quality 3.5/5. … By aggregating the lower-level evaluations into the two
+        higher-level dimensions, Output A obtains the stronger final reward and is selected as the better response.
+        <br><br><em>（中文示意：请用层次式标准评估：内容质量（准确性、信息量）与表达质量（清晰度、有用性）；先把底层评估聚合到两个高层维度，A 最终得分更高。）</em>
+      </div>
+      <p>
+        值得一提的是，推理同样可以融入基于评分细则的评估。例如在清单式细则中，可以要求奖励模型先对每条标准进行推理，再给出对应的
+        Pass/Fail 判断。此外，尽管我们为了示例统一采用成对评估——即输入 \((\mathbf{x},\mathbf{y}_a,\mathbf{y}_b)\) 作为奖励模型输入——
+        基于评分细则的奖励建模同样适用于逐点评估（pointwise evaluation），即只输入 \((\mathbf{x},\mathbf{y})\)。
+      </p>
+      <figure class="float">
+        <img src="figs/p35-fig16.png?v=figfix3" alt="图16：自动评分细则生成的两种常用方式">
+        <figcaption>
+          <strong>图 16：</strong>两种常用的自动评分细则生成方式，以清单式细则为例说明。(a) 用外部 LLM 生成评分细则；
+          (b) 生成式奖励模型（GRM）自发生成评分细则。（原图截取自英文原版 PDF 第 35 页）
+        </figcaption>
+      </figure>
+      <p>
+        评分细则的质量对基于评分细则的奖励模型的性能至关重要，因此近期工作越来越关注“如何构造用于奖励建模的高质量评分细则”。
+        与机器学习中的许多其他组件类似，获取评分细则总体上分两条路线：人工设计与自动生成。
+      </p>
+      <p>
+        人工设计方面，直接的做法是请人类专家根据自己的领域知识和任务要求撰写评分细则。然而，要设计出能全面覆盖各种输入与任务下
+        多样情形的评分细则往往很困难：适合一种情形的评估标准，对另一种情形可能不充分。此外，人工设计的评分细则还会继承基于 LLM
+        评估的提示敏感性：即使底层评估维度完全相同，措辞上的细微差异也可能导致明显不同的结果。
+      </p>
+      <p>
+        一种有前景的策略是基于输入动态生成评分细则。如图 16 所示，现有做法大体分两类：第一类调用外部 LLM，依据输入与评估要求生成任务特定的
+        评分细则，再提供给奖励模型做偏好预测；第二类让生成式奖励模型为当前输入自行生成评分细则，并依据这些自发产生的标准评估候选回答。
+      </p>
+      <p>
+        两种方法都把评分细则的生成当作显式任务，这自然引出另一个想法：能否直接优化评分细则的生成过程，产出更好的细则？答案是可以。
+        LLM 直接生成的细则可能存在覆盖有限、标准冗余、偏好错位等问题（Liu et al., 2026a; Shen et al., 2026）。为提升细则质量，
+        可以显式地精炼已生成的评分细则：例如 OpenRubrics 通过对比受偏好与被拒绝的回答、识别更具区分度的规则与原则来生成评分细则
+        （Liu et al., 2026a）。还可以用强化学习训练进一步直接优化评分细则的生成过程（Xu et al., 2026）；更新的研究再进一步，
+        让评分细则与策略共同演化，使评估标准随模型提升持续捕捉其新的弱点
+        （Rezaei et al., 2025; Ding et al., 2026; Yu et al., 2026a）。评分细则优化正在成为一个活跃研究方向，读者可参阅上述工作了解更多细节。
+      </p>
+
+      <h3>4.1.6 奖励模型的评估</h3>
+      <p>
+        训练好奖励模型后，一个关键问题是如何评估“学到的奖励函数是否准确刻画了人类偏好”。与直接预测显式标签的常规监督模型不同，
+        奖励模型学到的是反映输出相对质量高低的分数。因此，现有评估方法主要关注两点：奖励模型的偏好建模能力，以及它在下游强化学习优化中的有效性。
+        图 17 比较了三种主流评估范式：基于强化学习的评估、两两排序评估和列表排序评估。下面概括这些常用评估方法。
+      </p>
+      <p>
+        <strong>基于强化学习的评估（RL-based Evaluation）。</strong>
+        一种直接的做法是测量奖励模型对下游强化学习训练的效果。具体地，给定多个奖励模型 \(\{\mathcal{M}_r^1,\cdots,\mathcal{M}_r^K\}\)，
+        用它们分别提供奖励信号来训练策略模型，同时保持训练数据、强化学习算法与超参数完全一致（Wang et al., 2026b; Frick et al., 2025）。
+        强化学习训练后得到一组优化后的策略 \(\{\mathcal{P}_1,\cdots,\mathcal{P}_k\}\)，再在人类偏好基准或下游任务上评估它们；
+        每个策略的性能间接反映其对应奖励模型的质量。据此我们认为：高质量的奖励模型应能提供更可靠的奖励信号，帮助策略取得更好的最终性能。
+      </p>
+      <p>
+        <strong>两两排序评估（Pairwise Ranking Evaluation）。</strong>
+        虽然基于强化学习的评估直接衡量了奖励模型能否改进下游策略优化，但有两个局限。第一，评估代价高昂：强化学习训练需要大量计算资源与时间，
+        难以高效比较不同奖励模型。第二，评估结果可能对强化学习流程中的其他因素（如强化学习算法的选择）敏感，从而混入奖励模型质量之外的额外变量。
+        针对这些局限，更高效的做法是直接评估奖励模型的偏好排序能力。给定提示 \(\mathbf{x}\) 与两个候选输出 \(\mathbf{y}^+\) 和
+        \(\mathbf{y}^-\)（按人类标注 \(\mathbf{y}^+\) 优于 \(\mathbf{y}^-\)），奖励模型预测二者的相对偏好。对判别式奖励模型，
+        比较两个输出的预测分数：若模型给 \(\mathbf{y}^+\) 更高分，则预测与人类偏好一致；对生成式奖励模型，模型依据生成的偏好判断直接选出
+        \(\mathbf{y}^+\) 为受偏好输出，否则判为预测错误。通过构造大量两两排序样本，即可用排序准确率评估奖励模型：
+      </p>
+      <figure class="float">
+        <img src="figs/p37-fig17.png?v=figfix3" alt="图17：常用的奖励模型评估方法">
+        <figcaption>
+          <strong>图 17：</strong>常用的奖励模型评估方法。基于强化学习的评估：用奖励模型为策略优化提供奖励信号，以其优化所得策略的
+          下游性能衡量奖励模型质量；两两排序评估：奖励模型比较受偏好与不受偏好的输出，预测结果与人类偏好标注核对；
+          列表排序评估：奖励模型从多个候选中选出最佳输出，选出结果与人类偏好的输出比对。
+          （原图截取自英文原版 PDF 第 37 页）
+        </figcaption>
+      </figure>
+      <div class="equation">\[ \mathrm{Acc} = \frac{1}{N}\sum_{i=1}^{N}\mathbb{I}\left[R_{\hat{\theta}}(\mathbf{x}_i,\mathbf{y}_i^+)\gt R_{\hat{\theta}}(\mathbf{x}_i,\mathbf{y}_i^-)\right] \tag{48} \]</div>
+      <p>
+        其中 \(N\) 为评估样本数。这类评估方法的例子包括 RewardBench（Lambert et al., 2025; Malik et al., 2026）、
+        RM-Bench（Liu et al., 2025b）、RMB（Zhou et al., 2025）与 JudgeBench（Tan et al., 2025）。
+      </p>
+      <p>
+        <strong>列表排序评估（Listwise Ranking Evaluation）。</strong>
+        在实际对齐场景中，奖励模型常常需要从多个候选中选出最佳输出，例如 best-of-\(n\) 采样或重排序。因此，列表排序评估衡量的是
+        奖励模型能否对一组候选输出给出一致的排序。具体地，给定提示 \(\mathbf{x}\) 与候选输出集合
+        \(\mathcal{Y}=\{\mathbf{y}_1,\mathbf{y}_2,\cdots,\mathbf{y}_n\}\)，奖励模型为所有候选打分；基于计算出的奖励，
+        奖励模型选出得分最高的输出：
+      </p>
+      <div class="equation">\[ \mathbf{y}_{\mathrm{best}} = \arg\max_{\mathbf{y}_i\in\mathcal{Y}} R_{\hat{\theta}}(\mathbf{x},\mathbf{y}_i) \tag{49} \]</div>
+      <p>
+        再把选出的输出与人类偏好的输出对比，评估奖励模型对人类偏好的刻画程度。这里以 PPE（Frick et al., 2025）为例说明这种评估方式。
+        具体地，每个评估样本包含多个候选输出，且每个输出的质量可自动验证。例如数学推理任务可用答案验证器判断每个生成的解是否正确。
+        给定候选集合 \(\mathcal{Y}\)，各输出的验证结果可表示为：
+      </p>
+      <div class="equation">\[ v_i = \mathrm{Verify}(\mathbf{x},\mathbf{y}_i),\quad v_i\in\{0,1\} \tag{50} \]</div>
+      <p>
+        其中 \(v_i=1\) 表示输出正确。若奖励模型选中的输出经检验正确：\(\mathrm{Verify}(\mathbf{x},\mathbf{y}_{\mathrm{best}})=1\)，
+        则认为它在该样本上成功。最终性能以全部评估实例上的选择准确率衡量：
+      </p>
+      <div class="equation">\[ \mathrm{Acc} = \frac{1}{N}\sum_{j=1}^{N}\mathbb{I}\big(\mathrm{Verify}(\mathbf{x}_j,\mathbf{y}_{\mathrm{best}}^j)=1\big) \tag{51} \]</div>
+      <p>其中 \(N\) 为评估实例数。</p>
+
+      <h2>4.2 更好的优势估计</h2>
+      <p>
+        准确的优势估计在强化学习中至关重要，尤其是在优化策略模型、要真实反映不同动作（在 LLM 训练中即不同词元）潜在收益的时候。
+        本小节深入介绍改进优势估计的方法，在策略模型优化过程中提供更准确的优势。
+      </p>
+
+      <h3>4.2.1 基于时序差分（TD）的优势估计</h3>
+      <p>
+        先回顾基于蒙特卡洛的优势估计。如 3.3 节所述，先采样输出并计算其价值；优势可由“实际收到的累计奖励”与“各时间步的预测价值”比较得到，
+        时间步 \(t\) 的优势为：
+      </p>
+      <div class="equation">\[ A_t \;=\; \sum_{k=t}^{T}r_k - V_t \tag{52} \]</div>
+      <p>
+        基于蒙特卡洛的优势估计能让训练过程相对稳定，但它有两个主要问题：
+      </p>
+      <p>
+        • 每个输入都需要采样完整输出。在某些即时奖励可用的场合，用部分输出更新策略模型会更高效；但用式 (52) 估计优势时这不可行，
+        因为必须计算 \(\sum_{k=t}^{T}r_k\)——它需要整条输出的奖励。
+      </p>
+      <p>
+        • 该方法的方差仍然很高。单次采样可能受随机因素影响，估计结果可能不稳定，如图 18 所示。
+      </p>
+      <p>
+        为应对这些挑战，另一条路是基于时序差分（temporal difference）的优势估计（Sutton, 1988）：它能用不完整的输出估计优势。
+        更具体地说，该方法计算相邻时间步（当前步与下一步）预测价值之差，并随新信息到来不断更新优势估计，从而降低对整条输出的依赖。
+        实际实现中，基于时序差分（TD）的优势估计可写成：
+      </p>
+      <figure class="float">
+        <img src="figs/p39-fig18.png?v=figfix3" alt="图18：蒙特卡洛优势估计的高方差问题示意">
+        <figcaption>
+          <strong>图 18：</strong>基于蒙特卡洛的优势估计中的高方差问题示意，使用式 (13) 所述基于长度的奖励函数。
+          通常，若价值模型训练良好，它会基于多数输出约 60 词元、在时刻 \(t\) 预测平均价值 \(V_t=6\)。
+          但对 \(\mathbf{y}_{d,t:T}\) 这类可能长达 300 词元的离群输出，优势估计的方差会很大：例如其优势为
+          \(A_t(\mathbf{x},\mathbf{y}_{d,\lt t},y_{d,t})=\sum_{k=t}^{T}r_k-V_t=30-6=24\)；
+          而另一条接近平均长度的输出 \(\mathbf{y}_{1,t:T}\) 的优势可能只有 \(A_t(\mathbf{x},\mathbf{y}_{1,\lt t},y_{1,t})=-1\)。
+          这种悬殊差距导致高梯度方差，可能让学习过程失稳。（原图截取自英文原版 PDF 第 39 页）
+        </figcaption>
+      </figure>
+      <div class="equation">\[ A_t^{\mathrm{TD}} \;=\; r_t+\gamma V_{t+1}-V_t \tag{53} \]</div>
+      <p>
+        由于只关注当前与下一步，基于时序差分的优势估计把遥远未来事件的影响降到最低。这让策略模型优化的方差更低，提升策略训练的稳定性。
+      </p>
+
+      <h3>4.2.2 广义优势估计</h3>
+      <p>
+        虽然基于时序差分的估计能有效降低方差，但由于高度依赖价值模型的预测，也可能抬高估计偏差。相比之下，
+        广义优势估计（generalized advantage estimation，GAE）是 LLM 及其他领域最流行的优势估计方法之一
+        （Schulman et al., 2016）。该方法用多未来步时序差分残差的指数加权平均来细化优势估计。具体地，考虑时间步 \(t\) 的
+        时序差分残差 \(\delta_t\)，其定义为：
+      </p>
+      <div class="equation">\[ \delta_t \;=\; r_t+\gamma V_{t+1}-V_t \tag{54} \]</div>
+      <p>
+        GAE 引入可动态权衡偏差与方差的参数。其基本思想是用多步时序差分残差的加权和来估计优势，
+        兼取蒙特卡洛方法（高方差、低偏差）与时序差分方法（低方差、高偏差）之长。这一组合可表示为：
+      </p>
+      <div class="equation">\[ A_t^{\mathrm{gae}} \;=\; \sum_{n=0}^{T-t}(\gamma\lambda)^{n}\delta_{t+n} \tag{55} \]</div>
+      <p>可以把上述模型递推展开：</p>
+      <div class="equation">\[ A_t^{\mathrm{gae}} \;=\; \delta_t+\gamma\lambda A_{t+1}^{\mathrm{gae}} \tag{56} \]</div>
+      <p>
+        这个递推形式说明：当前的优势估计不仅包含时间步 \(t\) 的即时时序差分误差，还纳入经 \(\gamma\) 与 \(\lambda\) 加权调节的未来时间步优势估计。
+        该方法兼收蒙特卡洛方法与时序差分方法之长，带来更稳定、更高效的训练过程。
+      </p>
+
+      <h3>4.2.3 组相对策略优化</h3>
+      <p>
+        前面各小节的方法虽能有效估计学习过程中的优势，但它们都依赖一个与策略模型并行训练的价值模型。这种依赖不仅让训练流程更复杂，
+        应用于 LLM 训练时还需要可观的计算资源。由此自然产生一个想法：能否用更轻量的方法计算优势、不依赖价值模型？
+        这样就能省去价值模型组件、提升效率。
+      </p>
+      <figure class="float">
+        <img src="figs/p40-fig19.png?v=figfix3" alt="图19：组相对策略优化">
+        <figcaption>
+          <strong>图 19：</strong>组相对策略优化（GRPO）。与 PPO 相比，它免去价值模型，直接用一组输出的奖励估计优势，
+          能简化训练过程、降低计算资源需求。（原图截取自英文原版 PDF 第 40 页）
+        </figcaption>
+      </figure>
+      <p>
+        事实上这完全可行。Shao et al.（2024）的工作就是一例，称为组相对策略优化（group relative policy optimization，GRPO）。
+        在 GRPO 中，优势基于每组内各输出的相对奖励计算。具体地，给定输入 \(\mathbf{x}\)，GRPO 采样一组输出
+        再用奖励模型或奖励函数计算每个输出的奖励，记作
+        \(\mathbf{R}=\{R(\mathbf{x},\mathbf{y}_1),R(\mathbf{x},\mathbf{y}_2),\ldots,R(\mathbf{x},\mathbf{y}_G)\}\)。
+        第 \(i\) 个输出的优势可通过它相对组内其他输出的相对奖励计算：
+      </p>
+      <div class="equation">\[ A_{i,t}^{\mathrm{grpo}} = \frac{R(\mathbf{x},\mathbf{y}_i)-\mathrm{Mean}(\mathbf{R})}{\mathrm{Std}(\mathbf{R})} \tag{57} \]</div>
+      <p>
+        其中 \(\mathrm{Mean}(\cdot)\) 与 \(\mathrm{Std}(\cdot)\) 分别为均值与标准差函数。注意这里的优势计算与 PPO 略有不同：
+        本例中这个优势被用于每个时间步；而传统 PPO 是为每个时间步分别计算优势。到这一步，还可以用过程奖励模型补充优势计算，
+        得到各时间步专门的优势。简单做法是在每个时间步实现式 (57)，其中的奖励由过程奖励模型给出。于是 GRPO 的目标可参照式 (32) 定义为：
+      </p>
+      <div class="equation">\[ \mathcal{L}_g(\theta) \;=\; -\mathbb{E}_{\mathbf{x}\sim\mathcal{S}_x}\frac{1}{G}\sum_{i=1}^{G}\left[\sum_{t=1}^{T}\mathrm{Clip}\Big(\frac{\mathrm{Pr}_{\theta}(y_{i,t}\mid\mathbf{x},\mathbf{y}_{i,\lt t})}{\mathrm{Pr}_{\theta_{\mathrm{ref}}}(y_{i,t}\mid\mathbf{x},\mathbf{y}_{i,\lt t})}A_{i,t}^{\mathrm{grpo}}\Big)-\beta\mathrm{Penalty}\right] \tag{58} \]</div>
+      <p>
+        除了改进优势计算，GRPO 还修改了惩罚项以进一步优化优化目标。由于我们聚焦优势估计，这里不展开细节，感兴趣的读者可参阅 GRPO 原论文。
+        GRPO 的工作流如图 19 所示，展示了这些改动如何融入训练过程。
+      </p>
+      <p>
+        此外，还有其他像 GRPO 这样、训练 LLM 时不依赖价值模型的优势设计方法，例如 Li et al.（2024）与 Hu（2025）讨论的方法。
+      </p>
+
+      <h2>4.3 高效的强化学习方法</h2>
+      <p>
+        效率是强化学习许多实际应用的重要考量；对参数量庞大的 LLM 训练更是如此。例如在显存与时间受限的情况下用强化学习训练 LLM。
+        实践中，强化学习的效率并非单一问题，而涵盖广泛挑战。虽然现有文献可以从多种角度归类这些挑战，我们聚焦两个根本方面：
+        <em>时间效率与空间效率</em>——这是效率类问题的两大常见类别。针对这两个效率问题，我们的目标是用最少的时间与内存达到理想的强化学习效果。
+      </p>
+      <p>
+        本节不会讨论与强化学习效率相关的所有问题——那是一个广阔的领域；我们聚焦训练 LLM 常用的方法。其中一些方法改进采样过程，
+        另一些则力求去掉某些组件（如奖励模型）、代之以轻量方法。虽然这些方法是为 LLM 训练建议的，它们相当通用，也可用于其他强化学习场景。
+      </p>
+
+      <h3>4.3.1 动态采样</h3>
+      <p>
+        如 3.1 节所述，用强化学习训练 LLM 通常要对 \(\mathcal{S}_x\) 中的每个样本 \(\mathbf{x}\) 进行采样，带来可观的计算时间开销。
+        这在大规模强化学习场景中尤其棘手：需要数千个训练步，例如 DeepSeek-R1（Guo et al., 2025）。
+      </p>
+      <p>
+        从 LLM 推理的角度看，有不少方法能降低采样的时间开销：由于采样过程由 LLM 推理实现，任何加速推理的方法都有理由用于缩短采样时间。
+        例如 KV-Cache（Pope et al., 2023）、量化（Zhao et al., 2024）与投机解码（Chen et al., 2023b）。不过本节不展开这些方法：
+        它们数量众多、各针对 LLM 推理的不同方面，感兴趣的读者可参阅这些论文了解更多。这里我们聚焦一类特定方法：
+        从“为 LLM 训练优化强化学习”的角度削减采样开销。
+      </p>
+      <p>
+        在讨论具体方法前，先回顾采样的目的。给定样本 \(\mathbf{x}\)，采样的目标是探索策略模型更好的输出 \(\mathbf{y}\)。
+        这一过程让我们评估不同可能的输出、找出带来更好结果的那些，使模型对状态做出更明智的决策、优化其性能。与典型强化学习场景不同——
+        那里的策略模型可能从信息有限或随机初始化起步——LLM 训练中的策略模型通常起点已经相当高：它们是基于预训练与 SFT
+        已获得大量知识的模型。因此对某些样本，策略模型不进一步探索与优化也能表现良好。这可以用经典强化学习的
+        探索与利用（exploration versus exploitation）两难来理解（Sutton &amp; Barto, 2018）：在这种情况下，探索未必必要，
+        利用预训练模型已有的知识可能更有效。因此，必须在“探索新可能”与“发挥策略模型已有知识”之间取得平衡、使效率最大化。
+      </p>
+      <p>
+        要实现这种探索-利用平衡，一个简单直接的做法是识别出真正需要探索的样本、只对它们采样。具体地，设有只含输入的数据集
+        \(\mathcal{S}_x=\{\mathbf{x}_1,\mathbf{x}_2,\ldots,\mathbf{x}_N\}\)，\(N\) 为数据规模。我们可以用奖励模型评估策略模型对探索的需求：
+        先对每个 \(\mathbf{x}\) 用贪心搜索生成 \(\hat{\mathbf{y}}\)；再以 \(\mathbf{x}\) 与 \(\hat{\mathbf{y}}\) 为奖励模型输入，
+        得到第 \(k\) 个样本的奖励 \(R_{\hat{\phi}}(\mathbf{x}_k,\hat{\mathbf{y}}_k)\)。
+      </p>
+      <p>
+        这时可以直接用奖励值判断某样本是否需要进一步探索与优化。具体地，设阈值 \(r_{\mathrm{upper}}\)：样本奖励超过它，
+        则认为无需再采样与优化；否则需要探索与优化。这种做法实现了选择性采样与优化，把资源集中到最可能从进一步探索中受益的样本上，
+        提升整体流程的效率（Wang et al., 2024b）。实现中的一个难点是确定 \(r_{\mathrm{upper}}\) 的取值，通常把它设为平均奖励：
+      </p>
+      <div class="equation">\[ r_{\mathrm{upper}} \;=\; \frac{1}{N}\sum_{i=1}^{N}R_{\hat{\phi}}(\mathbf{x}_i,\hat{\mathbf{y}}_i) \tag{59} \]</div>
+      <p>
+        类似的动态采样策略——所谓优先级采样（prioritized sampling）——在大规模强化学习场景中已被证明有效（Team et al., 2025b）。
+        不过动态采样还要考虑另一个重要因素：对奖励极低的样本，策略模型可能不具备有效学习优化的能力，过度探索这类样本并不高效。
+        因此可以再引入下阈值 \(r_{\mathrm{lower}}\)，剔除对这些低奖励样本的不必要探索、提升效率。这样，策略模型可以把探索与优化集中到
+        一组合适的样本上，避免把采样时间浪费在不太可能探索出更优输出的样本上（Li et al., 2025a）。
+      </p>
+      <p>
+        与这里讨论密切相关的概念是样本效率。该主题在近期文献中讨论很多：例如，有知识蒸馏方面的研究为选出一小小子集做采样，
+        以获得更优表现（Wang et al., 2021）。更近期，SFT 中大量工作通过从少量指令样本中学习来提升 SFT 效率，聚焦指令样本的选择
+        （Chen et al., 2024）。
+      </p>
+
+      <h3>4.3.2 轻量化奖励方法</h3>
+      <p>
+        用强化学习训练 LLM 还有一个计算开销：需要频繁调用奖励模型计算奖励。此外，为保证奖励模型的可靠性与泛化能力，
+        我们往往把它扩展到很大规模（Gao et al., 2023），这又拉长了奖励计算的时间。
+      </p>
+      <p>
+        缓解该问题的一条路线是探索基于规则的奖励（rule-based rewards）：例如 3.1 节讨论过的、把输出长度用作奖励。
+        基于规则的奖励不依赖大规模、资源密集的模型，而是用预先定义的、任务特定的规则来分配奖励。这些规则通常源自专家知识或任务需求，
+        计算上很便宜，又能为策略模型提供快速有效的反馈。用基于规则的方法替换或补充传统奖励模型，既能降低奖励计算的时间与计算成本，
+        又能为学习过程提供有意义的引导。这一做法还基于一个认识：在某些任务上，人类偏好并不复杂、无需训练奖励模型那么重的代价，
+        直接用规则就能高效表达。
+      </p>
+      <p>
+        这里，除前述基于长度的奖励外，再给出两个基于规则奖励的例子。第一，考虑输出格式：可以设计奖励，鼓励策略模型生成符合特定格式的输出。
+        例如，针对输入“Give me three tips to improve my accuracy in solving math problems.”（给我三条建议，提高我做数学题的正确率。），
+        可以根据输出能否被正确解析为 JSON、并且是否以 “tip1”、“tip2”、“tip3” 作为键来分配奖励：
+      </p>
+      <div class="promptbox" style="font-family:inherit;">
+        <table class="data" style="width:100%;border:none;">
+          <tbody>
+            <tr>
+              <td style="border:none;width:12%;color:#7a8490;">Input</td>
+              <td style="border:none;">Give me three tips to improve my accuracy in solving math problems. Return in JSON format
+                with “tip1”, “tip2”, “tip3” as the key and the corresponding tip as the value.
+                （<strong>要求输出 JSON</strong>）</td>
+              <td rowspan="3" style="border:none;text-align:center;width:14%;">格式检查器<br>（Format Checker）</td>
+              <td rowspan="3" style="border:none;text-align:center;width:10%;">奖励</td>
+            </tr>
+            <tr>
+              <td style="border:none;color:#7a8490;">Output 1</td>
+              <td style="border:none;">{ "tip1": " Delve into the labyrinth of equations with the focus of a hawk hunting …",
+                "tip2": " Engage in the art of problem-solving like a master alchemist turning …",
+                "tip3": "Practice, practice, practice, until the numbers themselves bow in reverence …" }
+                （<strong>Valid: True</strong>）</td>
+              <td style="border:none;text-align:center;font-size:1.2em;">＋1</td>
+            </tr>
+            <tr>
+              <td style="border:none;color:#7a8490;">Output 2</td>
+              <td style="border:none;">tip1: " Delve into the labyrinth of equations with the focus of a hawk hunting …",
+                tip2: " Engage in the art of problem-solving like a master alchemist turning …",
+                tip3: "Practice, practice, practice, until the numbers themselves bow in reverence …"
+                （<strong>Valid: False</strong>，非合法 JSON）</td>
+              <td style="border:none;text-align:center;font-size:1.2em;">＋0</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p>
+        类似地，在数学推理任务中，期望结果是最终答案正确。我们可以设计规则验证答案是否正确，根据结果是否正确提供奖励
+        （Havrilla et al., 2024; Shao et al., 2024）。
+      </p>
+      <div class="promptbox" style="font-family:inherit;">
+        <table class="data" style="width:100%;border:none;">
+          <tbody>
+            <tr>
+              <td style="border:none;width:12%;color:#7a8490;">Input</td>
+              <td style="border:none;">Weng earns $12 an hour for babysitting. Yesterday, she just did 50 minutes of babysitting.
+                How much did she earn?（Weng 做保姆时薪 12 美元，昨天做了 50 分钟，挣了多少？）
+                （<strong>Answer is 10</strong>）</td>
+              <td rowspan="3" style="border:none;text-align:center;width:14%;">答案验证<br>（Answer Verification）</td>
+              <td rowspan="3" style="border:none;text-align:center;width:10%;">奖励</td>
+            </tr>
+            <tr>
+              <td style="border:none;color:#7a8490;">Output 1</td>
+              <td style="border:none;">Weng earns 12/60 = $0.2 per minute. Working 50 minutes, she earned 0.2 x 50 = $10.
+                ### <u>10</u> （<strong>Res: 10</strong>）</td>
+              <td style="border:none;text-align:center;font-size:1.2em;">＋1</td>
+            </tr>
+            <tr>
+              <td style="border:none;color:#7a8490;">Output 2</td>
+              <td style="border:none;">To find out how much Weng earned from the 50 minutes of babysitting, we need …
+                50 minutes x $12 per hour = $600. So, Weng earned $600 from the 50 minutes of babysitting.
+                ### <u>600</u> （<strong>Res: 600</strong>）</td>
+              <td style="border:none;text-align:center;font-size:1.2em;">−1</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p>
+        除了提升计算效率，基于规则的奖励还有一个好处：稳定。与奖励模型相比，基于规则的奖励不太容易出现奖励投机之类的问题——
+        规则是预先定义的，不会经历传统模型那样复杂的训练过程，策略模型优化目标与“oracle 奖励”之间的错位风险也随之降低。
+        这种稳定性使基于规则的奖励更可预测、更可靠，确保策略模型的学习过程较少受奖励模型预测误差或偏差的影响。
+        此外，近期研究表明，借助强化学习与基于规则的奖励，LLM 的推理能力可以获得显著提升，其实际有效性得到印证
+        （Guo et al., 2025; Xie et al., 2025）。
+      </p>
+      <p>
+        另一种轻量化奖励方法是使用参数量更小的奖励模型，同时降低计算时间与资源占用。实现路径有好几条。例如，既然奖励模型本质上利用的是 LLM，
+        许多原本为 LLM 开发的高效方法可以直接迁移给奖励模型以提升其效率，如专家混合（Mixture of Experts，MoE）
+        （Masoudnia &amp; Ebrahimpour, 2014）与模型剪枝（Sun et al., 2024a）。再者，知识蒸馏技术提供了一条途径：
+        构建一个更小的奖励模型，学习模仿更大模型的行为（Wang et al., 2023a）。这类做法不仅提升奖励模型的效率，还能保持其给出准确奖励的能力。
+      </p>
+
+      <h2>4.4 直接偏好优化</h2>
+      <p>
+        尽管学习奖励模型是强化学习的标准步骤，却让整体训练流程远比监督训练复杂。训练一个可靠的奖励模型本身就不容易，
+        而欠佳的奖励模型会严重影响策略学习的成败。我们考虑一条替代路线——直接偏好优化（direct preference optimization，DPO）：
+        它省去显式建模奖励的环节，简化训练框架，直接依据用户偏好优化策略模型，不再单独开发奖励模型。这样一来，
+        就能以类似监督学习的方式实现人类偏好对齐。图 20 对比了标准 PPO 方法与 DPO 方法。
+      </p>
+      <p>
+        DPO 用一个直观的交叉熵损失简化 LLM 的强化学习过程，使学习流程更简洁、更稳定。我们不再展开 DPO 损失函数的详细推导，
+        而从“优化 LLM 的视角”讨论其优化思想。由 Bradley-Terry 奖励模型导出的损失函数可以写成：
+      </p>
+      <div class="equation">\[ \mathcal{L}_{\mathrm{dpo}}(\theta) \;=\; -\mathbb{E}_{(\mathbf{x},\mathbf{y}_a,\mathbf{y}_b)\sim\mathcal{D}_r}\Big[\log\mathrm{Sigmoid}\big(\beta\log\frac{\mathrm{Pr}_{\theta}(\mathbf{y}_a\mid\mathbf{x})}{\mathrm{Pr}_{\theta_{\mathrm{ref}}}(\mathbf{y}_a\mid\mathbf{x})}-\beta\log\frac{\mathrm{Pr}_{\theta}(\mathbf{y}_b\mid\mathbf{x})}{\mathrm{Pr}_{\theta_{\mathrm{ref}}}(\mathbf{y}_b\mid\mathbf{x})}\big)\Big] \tag{60} \]</div>
+      <figure class="float">
+        <img src="figs/p45-fig20.png?v=figfix3" alt="图20：PPO 与 DPO 训练 LLM 的对比">
+        <figcaption>
+          <strong>图 20：</strong>标准 PPO 与 DPO 训练 LLM 的对比。PPO：用人类偏好数据训练奖励模型，再以它训练策略模型与价值函数；
+          DPO：人类偏好数据的使用更直接——策略直接在这些数据上训练，无需训练奖励模型。
+          （原图截取自英文原版 PDF 第 45 页）
+        </figcaption>
+      </figure>
+      <p>
+        这个损失函数利用 DPO 训练的隐式奖励（implicit reward），取代对外部奖励模型的需求。隐式奖励按概率的对数比计算：
+      </p>
+      <div class="equation">\[ R(\mathbf{x},\mathbf{y}) = \beta\log\frac{\mathrm{Pr}_{\theta}(\mathbf{y}\mid\mathbf{x})}{\mathrm{Pr}_{\theta_{\mathrm{ref}}}(\mathbf{y}\mid\mathbf{x})} \tag{61} \]</div>
+      <p>
+        这里可以把 DPO 看作通过“策略与参考模型下输出的相对似然”直接对人类反馈建模。相比“先训练独立奖励模型、再用 PPO 等强化学习算法调整策略”
+        的传统方法，这种方法更直白。借助 3.1 节提到的假设空间，可以进一步理解 DPO 的优化目标。实践中，如图 21 所示，
+        可以把 DPO 理解为在假设空间中按 Bradley-Terry 模型做重排：它提高偏好数据的输出概率、降低不受偏好输出的概率。
+        与 TRPO 类似，DPO 也包含来自参考模型的惩罚项，确保更新保持在策略模型的可信行为空间内。
+      </p>
+      <p>
+        然而事物都有两面。DPO 简化了强化学习过程，也带来局限。值得注意的是：由于 DPO 去掉了训练中的探索环节，
+        其潜在峰值表现通常被认为低于以 PPO 为代表、包含探索、能发现更优策略的强化学习方法。换言之，DPO 的表现本质上受限于偏好数据中标注的
+        受偏好输出。为突破这一限制，现有做法聚焦保证高质量偏好输出：或借助 GPT-4 等先进 LLM，或依靠人工标注
+        （Cui et al., 2024a; Morimura et al., 2024）。
+      </p>
+      <figure class="float">
+        <img src="figs/p46-fig21.png?v=figfix3" alt="图21：从假设空间视角看 DPO 的优化目标">
+        <figcaption>
+          <strong>图 21：</strong>从假设空间视角说明 DPO 的优化目标。右上图是优化前不同假设上的概率分布，\(\mathbf{y}_a\) 为受偏好输出、
+          \(\mathbf{y}_b\) 为不受偏好输出；右下图是应用 DPO 后的概率：受偏好输出似然上升、不受偏好输出似然下降。
+          注意优化过程中，与 \(\mathbf{y}_a\) 相似的输出（如 \(\mathbf{y}_1\)）概率也会上升，与 \(\mathbf{y}_b\) 相似的输出（如 \(\mathbf{y}_2\)）
+          概率会下降——这是模型的泛化所致。（原图截取自英文原版 PDF 第 46 页）
+        </figcaption>
+      </figure>
+      <p>
+        与 DPO 相关的另一个局限是过度优化。由于 DPO 用 Bradley-Terry 模型刻画偏好，它可能受过度优化之累，例如长度投机：
+        更长的输出被误认为更符合人类偏好（Singhal et al., 2023; Wang et al., 2023b）。已有不少工作着手解决这一问题、
+        提出了 DPO 的多种变体，详见表 3。这里我们只介绍它们的优化目标；更多讨论请读者参阅相关论文。
+      </p>
+      <figure class="float">
+        <img src="figs/p47-table3.png?v=figfix3" alt="表3：DPO 变体及其优化目标">
+        <figcaption>
+          <strong>表 3：</strong>DPO 变体及其优化目标（表内为各变体的数学目标函数，此处按原书整表截图保留原文）。
+          （原表截取自英文原版 PDF 第 47 页）
+        </figcaption>
+      </figure>
+      <p class="pagebreak-note">［第 4 章正文完（含表 3），对应原书页 27–47。］</p>
+
+      <nav class="chapter-nav">
+        <a href="ch03.html">← 上一章：理解 LLM 训练中的强化学习</a>
+        <a href="ch05.html">下一章：面向 LLM 推理的强化学习 →</a>
+      </nav>
+    </div>
+  </body>
+</html>
